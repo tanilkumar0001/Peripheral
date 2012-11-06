@@ -1,0 +1,483 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.6	//
+FAST_TEST	uart_defines.v	/^`define FAST_TEST   1           \/\/ 64\/1024 packets are sent$/;"	c
+Tp	uart_sync_flops.v	/^parameter Tp            = 1;$/;"	c
+UART_ADDR_WIDTH	uart_defines.v	/^ `define UART_ADDR_WIDTH 3$/;"	c
+UART_ADDR_WIDTH	uart_defines.v	/^ `define UART_ADDR_WIDTH 5$/;"	c
+UART_DATA_WIDTH	uart_defines.v	/^ `define UART_DATA_WIDTH 32$/;"	c
+UART_DATA_WIDTH	uart_defines.v	/^ `define UART_DATA_WIDTH 8$/;"	c
+UART_DL1	uart_regs.v	/^`define UART_DL1 7:0$/;"	c
+UART_DL2	uart_regs.v	/^`define UART_DL2 15:8$/;"	c
+UART_FC_1	uart_defines.v	/^`define UART_FC_1		2'b00$/;"	c
+UART_FC_14	uart_defines.v	/^`define UART_FC_14	2'b11$/;"	c
+UART_FC_4	uart_defines.v	/^`define UART_FC_4		2'b01$/;"	c
+UART_FC_8	uart_defines.v	/^`define UART_FC_8		2'b10$/;"	c
+UART_FC_TL	uart_defines.v	/^`define UART_FC_TL	1:0	\/\/ Trigger level$/;"	c
+UART_FIFO_COUNTER_W	uart_defines.v	/^`define UART_FIFO_COUNTER_W	5$/;"	c
+UART_FIFO_DEPTH	uart_defines.v	/^`define UART_FIFO_DEPTH	16$/;"	c
+UART_FIFO_POINTER_W	uart_defines.v	/^`define UART_FIFO_POINTER_W	4$/;"	c
+UART_FIFO_REC_WIDTH	uart_defines.v	/^`define UART_FIFO_REC_WIDTH  11$/;"	c
+UART_FIFO_WIDTH	uart_defines.v	/^`define UART_FIFO_WIDTH	8$/;"	c
+UART_IE_MS	uart_defines.v	/^`define UART_IE_MS	3	\/\/ Modem Status Interrupt$/;"	c
+UART_IE_RDA	uart_defines.v	/^`define UART_IE_RDA	0	\/\/ Received Data available interrupt$/;"	c
+UART_IE_RLS	uart_defines.v	/^`define UART_IE_RLS	2	\/\/ Receiver Line Status Interrupt$/;"	c
+UART_IE_THRE	uart_defines.v	/^`define UART_IE_THRE	1	\/\/ Transmitter Holding Register empty interrupt$/;"	c
+UART_II_II	uart_defines.v	/^`define UART_II_II	3:1	\/\/ Interrupt identification$/;"	c
+UART_II_IP	uart_defines.v	/^`define UART_II_IP	0	\/\/ Interrupt pending when 0$/;"	c
+UART_II_MS	uart_defines.v	/^`define UART_II_MS	3'b000	\/\/ Modem Status$/;"	c
+UART_II_RDA	uart_defines.v	/^`define UART_II_RDA	3'b010	\/\/ Receiver Data available$/;"	c
+UART_II_RLS	uart_defines.v	/^`define UART_II_RLS	3'b011	\/\/ Receiver Line Status$/;"	c
+UART_II_THRE	uart_defines.v	/^`define UART_II_THRE	3'b001	\/\/ Transmitter Holding Register empty$/;"	c
+UART_II_TI	uart_defines.v	/^`define UART_II_TI	3'b110	\/\/ Timeout Indication$/;"	c
+UART_LC_BC	uart_defines.v	/^`define UART_LC_BC	6	\/\/ Break control$/;"	c
+UART_LC_BITS	uart_defines.v	/^`define UART_LC_BITS	1:0	\/\/ bits in character$/;"	c
+UART_LC_DL	uart_defines.v	/^`define UART_LC_DL	7	\/\/ Divisor Latch access bit$/;"	c
+UART_LC_EP	uart_defines.v	/^`define UART_LC_EP	4	\/\/ even parity$/;"	c
+UART_LC_PE	uart_defines.v	/^`define UART_LC_PE	3	\/\/ parity enable$/;"	c
+UART_LC_SB	uart_defines.v	/^`define UART_LC_SB	2	\/\/ stop bits$/;"	c
+UART_LC_SP	uart_defines.v	/^`define UART_LC_SP	5	\/\/ stick parity$/;"	c
+UART_LS_BI	uart_defines.v	/^`define UART_LS_BI	4	\/\/ Break interrupt$/;"	c
+UART_LS_DR	uart_defines.v	/^`define UART_LS_DR	0	\/\/ Data ready$/;"	c
+UART_LS_EI	uart_defines.v	/^`define UART_LS_EI	7	\/\/ Error indicator$/;"	c
+UART_LS_FE	uart_defines.v	/^`define UART_LS_FE	3	\/\/ Framing Error$/;"	c
+UART_LS_OE	uart_defines.v	/^`define UART_LS_OE	1	\/\/ Overrun Error$/;"	c
+UART_LS_PE	uart_defines.v	/^`define UART_LS_PE	2	\/\/ Parity Error$/;"	c
+UART_LS_TE	uart_defines.v	/^`define UART_LS_TE	6	\/\/ Transmitter Empty indicator$/;"	c
+UART_LS_TFE	uart_defines.v	/^`define UART_LS_TFE	5	\/\/ Transmit FIFO is empty$/;"	c
+UART_MC_DTR	uart_defines.v	/^`define UART_MC_DTR	0$/;"	c
+UART_MC_LB	uart_defines.v	/^`define UART_MC_LB	4	\/\/ Loopback mode$/;"	c
+UART_MC_OUT1	uart_defines.v	/^`define UART_MC_OUT1	2$/;"	c
+UART_MC_OUT2	uart_defines.v	/^`define UART_MC_OUT2	3$/;"	c
+UART_MC_RTS	uart_defines.v	/^`define UART_MC_RTS	1$/;"	c
+UART_MS_CCTS	uart_defines.v	/^`define UART_MS_CCTS	4	\/\/ Complement signals$/;"	c
+UART_MS_CDCD	uart_defines.v	/^`define UART_MS_CDCD	7$/;"	c
+UART_MS_CDSR	uart_defines.v	/^`define UART_MS_CDSR	5$/;"	c
+UART_MS_CRI	uart_defines.v	/^`define UART_MS_CRI	6$/;"	c
+UART_MS_DCTS	uart_defines.v	/^`define UART_MS_DCTS	0	\/\/ Delta signals$/;"	c
+UART_MS_DDCD	uart_defines.v	/^`define UART_MS_DDCD	3$/;"	c
+UART_MS_DDSR	uart_defines.v	/^`define UART_MS_DDSR	1$/;"	c
+UART_MS_TERI	uart_defines.v	/^`define UART_MS_TERI	2$/;"	c
+UART_REG_DL1	uart_defines.v	/^`define UART_REG_DL1	`UART_ADDR_WIDTH'd0	\/\/ Divisor latch bytes (1-2)$/;"	c
+UART_REG_DL2	uart_defines.v	/^`define UART_REG_DL2	`UART_ADDR_WIDTH'd1$/;"	c
+UART_REG_FC	uart_defines.v	/^`define UART_REG_FC  `UART_ADDR_WIDTH'd2	\/\/ FIFO control$/;"	c
+UART_REG_IE	uart_defines.v	/^`define UART_REG_IE	`UART_ADDR_WIDTH'd1	\/\/ Interrupt enable$/;"	c
+UART_REG_II	uart_defines.v	/^`define UART_REG_II  `UART_ADDR_WIDTH'd2	\/\/ Interrupt identification$/;"	c
+UART_REG_LC	uart_defines.v	/^`define UART_REG_LC	`UART_ADDR_WIDTH'd3	\/\/ Line Control$/;"	c
+UART_REG_LS	uart_defines.v	/^`define UART_REG_LS  `UART_ADDR_WIDTH'd5	\/\/ Line status$/;"	c
+UART_REG_MC	uart_defines.v	/^`define UART_REG_MC	`UART_ADDR_WIDTH'd4	\/\/ Modem control$/;"	c
+UART_REG_MS	uart_defines.v	/^`define UART_REG_MS  `UART_ADDR_WIDTH'd6	\/\/ Modem status$/;"	c
+UART_REG_RB	uart_defines.v	/^`define UART_REG_RB	`UART_ADDR_WIDTH'd0	\/\/ receiver buffer$/;"	c
+UART_REG_SR	uart_defines.v	/^`define UART_REG_SR  `UART_ADDR_WIDTH'd7	\/\/ Scratch register$/;"	c
+UART_REG_TR	uart_defines.v	/^`define UART_REG_TR  `UART_ADDR_WIDTH'd0	\/\/ transmitter$/;"	c
+VERBOSE_LINE_STATUS	uart_defines.v	/^`define VERBOSE_LINE_STATUS 0   \/\/ Details about the lsr (line status register)$/;"	c
+VERBOSE_WB	uart_defines.v	/^`define VERBOSE_WB  0           \/\/ All activity on the WISHBONE is recorded$/;"	c
+a	raminfr.v	/^input  [addr_width-1:0] a;   $/;"	p
+a	raminfr.v	/^wire  [addr_width-1:0] a;   $/;"	n
+addr_width	raminfr.v	/^parameter addr_width = 4;$/;"	c
+async_dat_i	uart_sync_flops.v	/^input   [width-1:0]             async_dat_i;            \/\/ asynchronous data input$/;"	p
+baud_o	uart_regs.v	/^output	baud_o;$/;"	p
+baud_o	uart_top.v	/^output	baud_o;$/;"	p
+bit_counter	uart_transmitter.v	/^reg [2:0] 									bit_counter;   \/\/ counts the bits to be sent$/;"	r
+bit_out	uart_transmitter.v	/^reg 											bit_out;$/;"	r
+block_cnt	uart_regs.v	/^reg  [7:0]                block_cnt;   \/\/ While counter counts, THRE status is blocked (delayed one character cycle)$/;"	r
+block_value	uart_regs.v	/^reg  [7:0]                block_value; \/\/ One character length minus stop bit$/;"	r
+bottom	uart_rfifo.v	/^reg	[fifo_pointer_w-1:0]	bottom;$/;"	r
+bottom	uart_tfifo.v	/^reg	[fifo_pointer_w-1:0]	bottom;$/;"	r
+brc_value	uart_receiver.v	/^wire [7:0] 	brc_value; \/\/ value to be set to break counter$/;"	n
+break_error	uart_receiver.v	/^wire 				break_error = (counter_b == 0);$/;"	n
+clk	raminfr.v	/^input clk;   $/;"	p
+clk	uart_receiver.v	/^input				clk;$/;"	p
+clk	uart_regs.v	/^input 									clk;$/;"	p
+clk	uart_rfifo.v	/^input				clk;$/;"	p
+clk	uart_tfifo.v	/^input				clk;$/;"	p
+clk	uart_transmitter.v	/^input 										clk;$/;"	p
+clk	uart_wb.v	/^input 		  clk;$/;"	p
+clk_i	uart_sync_flops.v	/^input                           clk_i;                  \/\/ clock input$/;"	p
+count	uart_rfifo.v	/^output	[fifo_counter_w-1:0]	count;$/;"	p
+count	uart_rfifo.v	/^reg	[fifo_counter_w-1:0]	count;$/;"	r
+count	uart_tfifo.v	/^output	[fifo_counter_w-1:0]	count;$/;"	p
+count	uart_tfifo.v	/^reg	[fifo_counter_w-1:0]	count;$/;"	r
+counter	uart_transmitter.v	/^reg [4:0] 									counter;$/;"	r
+counter_b	uart_receiver.v	/^reg	[7:0]	counter_b;	\/\/ counts the 0 (low) signals$/;"	r
+counter_t	uart_receiver.v	/^output	[9:0]			counter_t;$/;"	p
+counter_t	uart_receiver.v	/^reg	[9:0]	counter_t;	\/\/ counts the timeout condition clocks$/;"	r
+counter_t	uart_regs.v	/^wire [9:0] 								counter_t;$/;"	n
+cts	uart_regs.v	/^wire 										cts, dsr, ri, dcd;	   \/\/ effective signals$/;"	n
+cts_c	uart_regs.v	/^wire                    cts_c, dsr_c, ri_c, dcd_c; \/\/ Complement effective signals (considering loopback)$/;"	n
+cts_pad_i	uart_regs.v	/^wire 										cts_pad_i, dsr_pad_i, ri_pad_i, dcd_pad_i; \/\/ modem status bits$/;"	n
+cts_pad_i	uart_top.v	/^input 								 cts_pad_i;$/;"	p
+data8_out	uart_rfifo.v	/^wire [7:0] data8_out;$/;"	n
+data_in	uart_rfifo.v	/^input	[fifo_width-1:0]	data_in;$/;"	p
+data_in	uart_tfifo.v	/^input	[fifo_width-1:0]	data_in;$/;"	p
+data_out	uart_rfifo.v	/^output	[fifo_width-1:0]	data_out;$/;"	p
+data_out	uart_rfifo.v	/^wire	[fifo_width-1:0]	data_out;$/;"	n
+data_out	uart_tfifo.v	/^output	[fifo_width-1:0]	data_out;$/;"	p
+data_out	uart_tfifo.v	/^wire	[fifo_width-1:0]	data_out;$/;"	n
+data_width	raminfr.v	/^parameter data_width = 8;$/;"	c
+dcd	uart_regs.v	/^wire 										cts, dsr, ri, dcd;	   \/\/ effective signals$/;"	n
+dcd_c	uart_regs.v	/^wire                    cts_c, dsr_c, ri_c, dcd_c; \/\/ Complement effective signals (considering loopback)$/;"	n
+dcd_pad_i	uart_regs.v	/^wire 										cts_pad_i, dsr_pad_i, ri_pad_i, dcd_pad_i; \/\/ modem status bits$/;"	n
+dcd_pad_i	uart_top.v	/^input 								 dcd_pad_i;$/;"	p
+delayed_modem_signals	uart_regs.v	/^reg [3:0] delayed_modem_signals;$/;"	r
+depth	raminfr.v	/^parameter depth = 16;$/;"	c
+di	raminfr.v	/^input  [data_width-1:0] di;   $/;"	p
+di	raminfr.v	/^wire  [data_width-1:0] di;   $/;"	n
+dl	uart_regs.v	/^reg [15:0] 								dl;  \/\/ 32-bit divisor latch$/;"	r
+dlab	uart_regs.v	/^wire 										dlab;			   \/\/ divisor latch access bit$/;"	n
+dlc	uart_regs.v	/^reg [15:0] 								dlc;  \/\/ 32-bit divisor latch counter$/;"	r
+dpo	raminfr.v	/^output [data_width-1:0] dpo;   $/;"	p
+dpo	raminfr.v	/^wire [data_width-1:0] dpo;$/;"	n
+dpra	raminfr.v	/^input  [addr_width-1:0] dpra;   $/;"	p
+dpra	raminfr.v	/^wire  [addr_width-1:0] dpra;   $/;"	n
+dsr	uart_regs.v	/^wire 										cts, dsr, ri, dcd;	   \/\/ effective signals$/;"	n
+dsr_c	uart_regs.v	/^wire                    cts_c, dsr_c, ri_c, dcd_c; \/\/ Complement effective signals (considering loopback)$/;"	n
+dsr_pad_i	uart_regs.v	/^wire 										cts_pad_i, dsr_pad_i, ri_pad_i, dcd_pad_i; \/\/ modem status bits$/;"	n
+dsr_pad_i	uart_top.v	/^input 								 dsr_pad_i;$/;"	p
+dtr_pad_o	uart_regs.v	/^output 									dtr_pad_o;$/;"	p
+dtr_pad_o	uart_regs.v	/^wire 										rts_pad_o, dtr_pad_o;		   \/\/ modem control outputs$/;"	n
+dtr_pad_o	uart_top.v	/^output 								 dtr_pad_o;$/;"	p
+dtr_pad_o	uart_top.v	/^wire 									 dtr_pad_o;$/;"	n
+enable	uart_receiver.v	/^input				enable;$/;"	p
+enable	uart_regs.v	/^reg 										enable;$/;"	r
+enable	uart_transmitter.v	/^input 										enable;$/;"	p
+error_bit	uart_rfifo.v	/^output				error_bit;$/;"	p
+fcr	uart_debug_if.v	/^input [1:0] 							fcr;  \/\/\/ bits 7 and 6 of fcr. Other bits are ignored$/;"	p
+fcr	uart_regs.v	/^output [1:0]							fcr;  \/\/\/ bits 7 and 6 of fcr. Other bits are ignored$/;"	p
+fcr	uart_regs.v	/^reg [1:0] 								fcr;  \/\/\/ bits 7 and 6 of fcr. Other bits are ignored$/;"	r
+fcr	uart_top.v	/^wire	[1:0] fcr;$/;"	n
+fifo	uart_rfifo.v	/^reg	[2:0]	fifo[fifo_depth-1:0];$/;"	r
+fifo_counter_w	uart_rfifo.v	/^parameter fifo_counter_w = `UART_FIFO_COUNTER_W;$/;"	c
+fifo_counter_w	uart_tfifo.v	/^parameter fifo_counter_w = `UART_FIFO_COUNTER_W;$/;"	c
+fifo_depth	uart_rfifo.v	/^parameter fifo_depth = `UART_FIFO_DEPTH;$/;"	c
+fifo_depth	uart_tfifo.v	/^parameter fifo_depth = `UART_FIFO_DEPTH;$/;"	c
+fifo_pointer_w	uart_rfifo.v	/^parameter fifo_pointer_w = `UART_FIFO_POINTER_W;$/;"	c
+fifo_pointer_w	uart_tfifo.v	/^parameter fifo_pointer_w = `UART_FIFO_POINTER_W;$/;"	c
+fifo_read	uart_regs.v	/^wire	fifo_read;$/;"	n
+fifo_reset	uart_rfifo.v	/^input				fifo_reset;$/;"	p
+fifo_reset	uart_tfifo.v	/^input				fifo_reset;$/;"	p
+fifo_width	uart_rfifo.v	/^parameter fifo_width = `UART_FIFO_WIDTH;$/;"	c
+fifo_width	uart_tfifo.v	/^parameter fifo_width = `UART_FIFO_WIDTH;$/;"	c
+fifo_write	uart_regs.v	/^wire	fifo_write;$/;"	n
+flop_0	uart_sync_flops.v	/^reg     [width-1:0]             flop_0;$/;"	r
+ier	uart_debug_if.v	/^input [3:0] 							ier;$/;"	p
+ier	uart_regs.v	/^output [3:0]							ier;$/;"	p
+ier	uart_regs.v	/^reg [3:0] 								ier;$/;"	r
+ier	uart_top.v	/^wire	[3:0] ier;$/;"	n
+iir	uart_debug_if.v	/^input [3:0] 							iir;$/;"	p
+iir	uart_regs.v	/^output [3:0]							iir;$/;"	p
+iir	uart_regs.v	/^reg [3:0] 								iir;$/;"	r
+iir	uart_top.v	/^wire	[3:0] iir;$/;"	n
+iir_read	uart_regs.v	/^wire 	iir_read;$/;"	n
+init_value	uart_sync_flops.v	/^parameter init_value    = 1'b0;$/;"	c
+int_o	uart_regs.v	/^output 									int_o;$/;"	p
+int_o	uart_regs.v	/^reg 										int_o;$/;"	r
+int_o	uart_top.v	/^output 								 int_o;$/;"	p
+lcr	uart_debug_if.v	/^input [7:0] 							lcr;$/;"	p
+lcr	uart_receiver.v	/^input	[7:0]	lcr;$/;"	p
+lcr	uart_regs.v	/^output [7:0]							lcr;$/;"	p
+lcr	uart_regs.v	/^reg [7:0] 								lcr;$/;"	r
+lcr	uart_top.v	/^wire	[7:0] lcr;$/;"	n
+lcr	uart_transmitter.v	/^input [7:0] 								lcr;$/;"	p
+loopback	uart_regs.v	/^wire 										loopback;		   \/\/ loopback bit (MCR bit 4)$/;"	n
+lsr	uart_debug_if.v	/^input [7:0] 							lsr;$/;"	p
+lsr	uart_regs.v	/^output [7:0] 							lsr;$/;"	p
+lsr	uart_regs.v	/^wire [7:0] 								lsr;$/;"	n
+lsr	uart_top.v	/^wire	[7:0] lsr;$/;"	n
+lsr0	uart_regs.v	/^wire 										lsr0, lsr1, lsr2, lsr3, lsr4, lsr5, lsr6, lsr7;$/;"	n
+lsr0_d	uart_regs.v	/^reg 	 lsr0_d;$/;"	r
+lsr0r	uart_regs.v	/^reg										lsr0r, lsr1r, lsr2r, lsr3r, lsr4r, lsr5r, lsr6r, lsr7r;$/;"	r
+lsr1	uart_regs.v	/^wire 										lsr0, lsr1, lsr2, lsr3, lsr4, lsr5, lsr6, lsr7;$/;"	n
+lsr1_d	uart_regs.v	/^reg lsr1_d; \/\/ delayed$/;"	r
+lsr1r	uart_regs.v	/^reg										lsr0r, lsr1r, lsr2r, lsr3r, lsr4r, lsr5r, lsr6r, lsr7r;$/;"	r
+lsr2	uart_regs.v	/^wire 										lsr0, lsr1, lsr2, lsr3, lsr4, lsr5, lsr6, lsr7;$/;"	n
+lsr2_d	uart_regs.v	/^reg lsr2_d; \/\/ delayed$/;"	r
+lsr2r	uart_regs.v	/^reg										lsr0r, lsr1r, lsr2r, lsr3r, lsr4r, lsr5r, lsr6r, lsr7r;$/;"	r
+lsr3	uart_regs.v	/^wire 										lsr0, lsr1, lsr2, lsr3, lsr4, lsr5, lsr6, lsr7;$/;"	n
+lsr3_d	uart_regs.v	/^reg lsr3_d; \/\/ delayed$/;"	r
+lsr3r	uart_regs.v	/^reg										lsr0r, lsr1r, lsr2r, lsr3r, lsr4r, lsr5r, lsr6r, lsr7r;$/;"	r
+lsr4	uart_regs.v	/^wire 										lsr0, lsr1, lsr2, lsr3, lsr4, lsr5, lsr6, lsr7;$/;"	n
+lsr4_d	uart_regs.v	/^reg lsr4_d; \/\/ delayed$/;"	r
+lsr4r	uart_regs.v	/^reg										lsr0r, lsr1r, lsr2r, lsr3r, lsr4r, lsr5r, lsr6r, lsr7r;$/;"	r
+lsr5	uart_regs.v	/^wire 										lsr0, lsr1, lsr2, lsr3, lsr4, lsr5, lsr6, lsr7;$/;"	n
+lsr5_d	uart_regs.v	/^reg lsr5_d;$/;"	r
+lsr5r	uart_regs.v	/^reg										lsr0r, lsr1r, lsr2r, lsr3r, lsr4r, lsr5r, lsr6r, lsr7r;$/;"	r
+lsr6	uart_regs.v	/^wire 										lsr0, lsr1, lsr2, lsr3, lsr4, lsr5, lsr6, lsr7;$/;"	n
+lsr6_d	uart_regs.v	/^reg lsr6_d;$/;"	r
+lsr6r	uart_regs.v	/^reg										lsr0r, lsr1r, lsr2r, lsr3r, lsr4r, lsr5r, lsr6r, lsr7r;$/;"	r
+lsr7	uart_regs.v	/^wire 										lsr0, lsr1, lsr2, lsr3, lsr4, lsr5, lsr6, lsr7;$/;"	n
+lsr7_d	uart_regs.v	/^reg lsr7_d;$/;"	r
+lsr7r	uart_regs.v	/^reg										lsr0r, lsr1r, lsr2r, lsr3r, lsr4r, lsr5r, lsr6r, lsr7r;$/;"	r
+lsr_mask	uart_receiver.v	/^input       lsr_mask;$/;"	p
+lsr_mask	uart_regs.v	/^wire 										lsr_mask; \/\/ lsr_mask$/;"	n
+lsr_mask	uart_transmitter.v	/^input 										lsr_mask; \/\/reset of fifo$/;"	p
+lsr_mask_condition	uart_regs.v	/^wire 	lsr_mask_condition;$/;"	n
+lsr_mask_d	uart_regs.v	/^reg 										lsr_mask_d; \/\/ delay for lsr_mask condition$/;"	r
+mcr	uart_debug_if.v	/^input [4:0] 							mcr;$/;"	p
+mcr	uart_regs.v	/^output [4:0]							mcr;$/;"	p
+mcr	uart_regs.v	/^reg [4:0] 								mcr;$/;"	r
+mcr	uart_top.v	/^wire	[4:0] mcr;$/;"	n
+modem_inputs	uart_regs.v	/^input [3:0] 							modem_inputs;$/;"	p
+modem_inputs	uart_regs.v	/^wire [3:0] 								modem_inputs;$/;"	n
+ms_int	uart_regs.v	/^wire 										ms_int;   \/\/ modem status interrupt$/;"	n
+ms_int_d	uart_regs.v	/^reg 	 ms_int_d;$/;"	r
+ms_int_pnd	uart_regs.v	/^reg 	ms_int_pnd;$/;"	r
+ms_int_rise	uart_regs.v	/^wire 	 ms_int_rise;$/;"	n
+msi_reset	uart_regs.v	/^reg 										msi_reset; \/\/ reset MSR 4 lower bits indicator$/;"	r
+msr	uart_debug_if.v	/^input [7:0] 							msr;$/;"	p
+msr	uart_regs.v	/^output [7:0]							msr;$/;"	p
+msr	uart_regs.v	/^reg [7:0] 								msr;$/;"	r
+msr	uart_top.v	/^wire	[7:0] msr;$/;"	n
+msr_read	uart_regs.v	/^wire  msr_read;$/;"	n
+overrun	uart_rfifo.v	/^output				overrun;$/;"	p
+overrun	uart_rfifo.v	/^reg				overrun;$/;"	r
+overrun	uart_tfifo.v	/^output				overrun;$/;"	p
+overrun	uart_tfifo.v	/^reg				overrun;$/;"	r
+parity_xor	uart_transmitter.v	/^reg 											parity_xor;  \/\/ parity of the word$/;"	r
+pop	uart_rfifo.v	/^input				pop;$/;"	p
+pop	uart_tfifo.v	/^input				pop;$/;"	p
+push	uart_rfifo.v	/^input				push;$/;"	p
+push	uart_tfifo.v	/^input				push;$/;"	p
+ram	raminfr.v	/^reg    [data_width-1:0] ram [depth-1:0]; $/;"	r
+raminfr	raminfr.v	/^module raminfr   $/;"	m
+rbit_counter	uart_receiver.v	/^reg	[2:0]	rbit_counter;$/;"	r
+rbit_in	uart_receiver.v	/^reg		rbit_in;$/;"	r
+rcounter16	uart_receiver.v	/^reg	[3:0]	rcounter16;$/;"	r
+rcounter16_eq_0	uart_receiver.v	/^wire		rcounter16_eq_0 = (rcounter16 == 4'd0);$/;"	n
+rcounter16_eq_1	uart_receiver.v	/^wire		rcounter16_eq_1 = (rcounter16 == 4'd1);$/;"	n
+rcounter16_eq_7	uart_receiver.v	/^wire 		rcounter16_eq_7 = (rcounter16 == 4'd7);$/;"	n
+rcounter16_minus_1	uart_receiver.v	/^wire [3:0] rcounter16_minus_1 = rcounter16 - 1'b1;$/;"	n
+rda_int	uart_regs.v	/^wire 										rda_int;  \/\/ receiver data available interrupt$/;"	n
+rda_int_d	uart_regs.v	/^reg 	 rda_int_d;$/;"	r
+rda_int_pnd	uart_regs.v	/^reg	rda_int_pnd;$/;"	r
+rda_int_rise	uart_regs.v	/^wire 	 rda_int_rise;$/;"	n
+re_o	uart_top.v	/^wire		          	     re_o;	\/\/ Read enable for registers$/;"	n
+re_o	uart_wb.v	/^output 		  re_o;$/;"	p
+reset_status	uart_rfifo.v	/^input       reset_status;$/;"	p
+reset_status	uart_tfifo.v	/^input       reset_status;$/;"	p
+rf_count	uart_debug_if.v	/^input [`UART_FIFO_COUNTER_W-1:0] rf_count;$/;"	p
+rf_count	uart_receiver.v	/^output	[`UART_FIFO_COUNTER_W-1:0]	rf_count;$/;"	p
+rf_count	uart_receiver.v	/^wire	[`UART_FIFO_COUNTER_W-1:0]	rf_count;$/;"	n
+rf_count	uart_regs.v	/^output [`UART_FIFO_COUNTER_W-1:0] 	rf_count;$/;"	p
+rf_count	uart_regs.v	/^wire [`UART_FIFO_COUNTER_W-1:0] 	rf_count;$/;"	n
+rf_count	uart_top.v	/^wire	[`UART_FIFO_COUNTER_W-1:0] rf_count;$/;"	n
+rf_data_in	uart_receiver.v	/^reg	[`UART_FIFO_REC_WIDTH-1:0]	rf_data_in;$/;"	r
+rf_data_out	uart_receiver.v	/^output	[`UART_FIFO_REC_WIDTH-1:0]	rf_data_out;$/;"	p
+rf_data_out	uart_receiver.v	/^wire	[`UART_FIFO_REC_WIDTH-1:0]	rf_data_out;$/;"	n
+rf_data_out	uart_regs.v	/^wire [`UART_FIFO_REC_WIDTH-1:0] 	rf_data_out;$/;"	n
+rf_error_bit	uart_receiver.v	/^output				rf_error_bit;$/;"	p
+rf_error_bit	uart_receiver.v	/^wire				rf_error_bit; \/\/ an error (parity or framing) is inside the fifo$/;"	n
+rf_error_bit	uart_regs.v	/^wire 										rf_error_bit; \/\/ an error (parity or framing) is inside the fifo$/;"	n
+rf_overrun	uart_receiver.v	/^output				rf_overrun;$/;"	p
+rf_overrun	uart_receiver.v	/^wire				rf_overrun;$/;"	n
+rf_pop	uart_receiver.v	/^input				rf_pop;$/;"	p
+rf_pop	uart_receiver.v	/^wire				rf_pop;$/;"	n
+rf_pop	uart_regs.v	/^reg 										rf_pop;$/;"	r
+rf_push	uart_receiver.v	/^reg				rf_push;$/;"	r
+rf_push_pulse	uart_receiver.v	/^output 				rf_push_pulse;$/;"	p
+rf_push_pulse	uart_receiver.v	/^wire      rf_push_pulse;$/;"	n
+rf_push_q	uart_receiver.v	/^reg   rf_push_q;$/;"	r
+rframing_error	uart_receiver.v	/^reg		rframing_error;		\/\/ framing error flag$/;"	r
+ri	uart_regs.v	/^wire 										cts, dsr, ri, dcd;	   \/\/ effective signals$/;"	n
+ri_c	uart_regs.v	/^wire                    cts_c, dsr_c, ri_c, dcd_c; \/\/ Complement effective signals (considering loopback)$/;"	n
+ri_pad_i	uart_regs.v	/^wire 										cts_pad_i, dsr_pad_i, ri_pad_i, dcd_pad_i; \/\/ modem status bits$/;"	n
+ri_pad_i	uart_top.v	/^input 								 ri_pad_i;$/;"	p
+rls_int	uart_regs.v	/^wire 										rls_int;  \/\/ receiver line status interrupt$/;"	n
+rls_int_d	uart_regs.v	/^reg 	 rls_int_d;$/;"	r
+rls_int_pnd	uart_regs.v	/^reg 	rls_int_pnd;$/;"	r
+rls_int_rise	uart_regs.v	/^wire 	 rls_int_rise;$/;"	n
+rparity	uart_receiver.v	/^reg		rparity;		\/\/ received parity$/;"	r
+rparity_error	uart_receiver.v	/^reg		rparity_error;$/;"	r
+rparity_xor	uart_receiver.v	/^reg		rparity_xor;$/;"	r
+rshift	uart_receiver.v	/^reg	[7:0]	rshift;			\/\/ receiver shift register$/;"	r
+rst_i	uart_sync_flops.v	/^input                           rst_i;                  \/\/ reset input$/;"	p
+rstate	uart_debug_if.v	/^input [3:0] 							rstate;$/;"	p
+rstate	uart_receiver.v	/^output [3:0] 		rstate;$/;"	p
+rstate	uart_receiver.v	/^reg	[3:0]	rstate;$/;"	r
+rstate	uart_regs.v	/^output [3:0] 							rstate;$/;"	p
+rstate	uart_regs.v	/^wire [3:0] 								rstate;$/;"	n
+rstate	uart_top.v	/^wire	[3:0] rstate; $/;"	n
+rts_pad_o	uart_regs.v	/^output 									rts_pad_o;$/;"	p
+rts_pad_o	uart_regs.v	/^wire 										rts_pad_o, dtr_pad_o;		   \/\/ modem control outputs$/;"	n
+rts_pad_o	uart_top.v	/^output 								 rts_pad_o;$/;"	p
+rts_pad_o	uart_top.v	/^wire 									 rts_pad_o;$/;"	n
+rx_reset	uart_receiver.v	/^input				rx_reset;$/;"	p
+rx_reset	uart_regs.v	/^reg 										rx_reset;$/;"	r
+s_idle	uart_transmitter.v	/^parameter s_idle        = 3'd0;$/;"	c
+s_pop_byte	uart_transmitter.v	/^parameter s_pop_byte    = 3'd5;$/;"	c
+s_send_byte	uart_transmitter.v	/^parameter s_send_byte   = 3'd2;$/;"	c
+s_send_parity	uart_transmitter.v	/^parameter s_send_parity = 3'd3;$/;"	c
+s_send_start	uart_transmitter.v	/^parameter s_send_start  = 3'd1;$/;"	c
+s_send_stop	uart_transmitter.v	/^parameter s_send_stop   = 3'd4;$/;"	c
+scratch	uart_regs.v	/^reg [7:0] 								scratch; \/\/ UART scratch register$/;"	r
+serial_in	uart_regs.v	/^wire serial_in = loopback ? serial_out : srx_pad;$/;"	n
+serial_out	uart_regs.v	/^wire serial_out;$/;"	n
+shift_out	uart_transmitter.v	/^reg [6:0] 									shift_out;	\/\/ output shift register$/;"	r
+sr_ca_lc_parity	uart_receiver.v	/^parameter  sr_ca_lc_parity	      = 4'd8;$/;"	c
+sr_check_parity	uart_receiver.v	/^parameter  sr_check_parity 		= 4'd5;$/;"	c
+sr_end_bit	uart_receiver.v	/^parameter  sr_end_bit				= 4'd7;$/;"	c
+sr_idle	uart_receiver.v	/^parameter  sr_idle 					= 4'd0;$/;"	c
+sr_push	uart_receiver.v	/^parameter  sr_push 					= 4'd10;$/;"	c
+sr_rec_bit	uart_receiver.v	/^parameter  sr_rec_bit 				= 4'd2;$/;"	c
+sr_rec_parity	uart_receiver.v	/^parameter  sr_rec_parity			= 4'd3;$/;"	c
+sr_rec_prepare	uart_receiver.v	/^parameter  sr_rec_prepare 			= 4'd6;$/;"	c
+sr_rec_start	uart_receiver.v	/^parameter  sr_rec_start 			= 4'd1;$/;"	c
+sr_rec_stop	uart_receiver.v	/^parameter  sr_rec_stop 				= 4'd4;$/;"	c
+sr_wait1	uart_receiver.v	/^parameter  sr_wait1 					= 4'd9;$/;"	c
+srx_pad	uart_regs.v	/^wire 										srx_pad;$/;"	n
+srx_pad_i	uart_receiver.v	/^input				srx_pad_i;$/;"	p
+srx_pad_i	uart_regs.v	/^input 									srx_pad_i;$/;"	p
+srx_pad_i	uart_regs.v	/^wire 										srx_pad_i;$/;"	n
+srx_pad_i	uart_top.v	/^input 								 srx_pad_i;$/;"	p
+stage1_clk_en_i	uart_sync_flops.v	/^input                           stage1_clk_en_i;        \/\/ synchronous clock enable for stage 1 FF$/;"	p
+stage1_rst_i	uart_sync_flops.v	/^input                           stage1_rst_i;           \/\/ synchronous reset for stage 1 FF$/;"	p
+start_dlc	uart_regs.v	/^reg 										start_dlc; \/\/ activate dlc on writing to UART_DL1$/;"	r
+stx_o_tmp	uart_transmitter.v	/^reg 											stx_o_tmp;$/;"	r
+stx_pad_o	uart_regs.v	/^output 									stx_pad_o;$/;"	p
+stx_pad_o	uart_regs.v	/^wire 										stx_pad_o;		\/\/ received from transmitter module$/;"	n
+stx_pad_o	uart_top.v	/^output 								 stx_pad_o;$/;"	p
+stx_pad_o	uart_top.v	/^wire 									 stx_pad_o;$/;"	n
+stx_pad_o	uart_transmitter.v	/^output 										stx_pad_o;$/;"	p
+sync_dat_o	uart_sync_flops.v	/^output  [width-1:0]             sync_dat_o;             \/\/ synchronous data output$/;"	p
+sync_dat_o	uart_sync_flops.v	/^reg     [width-1:0]             sync_dat_o;$/;"	r
+tf_count	uart_debug_if.v	/^input [`UART_FIFO_COUNTER_W-1:0] tf_count;$/;"	p
+tf_count	uart_regs.v	/^output [`UART_FIFO_COUNTER_W-1:0] 	tf_count;$/;"	p
+tf_count	uart_regs.v	/^wire [`UART_FIFO_COUNTER_W-1:0] 	tf_count;$/;"	n
+tf_count	uart_top.v	/^wire	[`UART_FIFO_COUNTER_W-1:0] tf_count;$/;"	n
+tf_count	uart_transmitter.v	/^output [`UART_FIFO_COUNTER_W-1:0] 	tf_count;$/;"	p
+tf_count	uart_transmitter.v	/^wire [`UART_FIFO_COUNTER_W-1:0] 		tf_count;$/;"	n
+tf_data_in	uart_transmitter.v	/^wire [`UART_FIFO_WIDTH-1:0] 			tf_data_in;$/;"	n
+tf_data_out	uart_transmitter.v	/^wire [`UART_FIFO_WIDTH-1:0] 			tf_data_out;$/;"	n
+tf_overrun	uart_transmitter.v	/^wire 											tf_overrun;$/;"	n
+tf_pop	uart_transmitter.v	/^reg 											tf_pop;$/;"	r
+tf_push	uart_regs.v	/^reg 										tf_push;$/;"	r
+tf_push	uart_transmitter.v	/^input 										tf_push;$/;"	p
+tf_push	uart_transmitter.v	/^wire 											tf_push;$/;"	n
+thre_int	uart_regs.v	/^wire										thre_int; \/\/ transmitter holding register empty interrupt$/;"	n
+thre_int_d	uart_regs.v	/^reg 	 thre_int_d;$/;"	r
+thre_int_pnd	uart_regs.v	/^reg 	thre_int_pnd;$/;"	r
+thre_int_rise	uart_regs.v	/^wire 	 thre_int_rise;$/;"	n
+thre_set_en	uart_regs.v	/^wire                      thre_set_en; \/\/ THRE status is delayed one character time when a character is written to fifo.$/;"	n
+ti_int	uart_regs.v	/^wire 										ti_int;   \/\/ timeout indicator interrupt$/;"	n
+ti_int_d	uart_regs.v	/^reg 	 ti_int_d;$/;"	r
+ti_int_pnd	uart_regs.v	/^reg 	ti_int_pnd;$/;"	r
+ti_int_rise	uart_regs.v	/^wire 	 ti_int_rise;$/;"	n
+toc_value	uart_receiver.v	/^reg 	[9:0]	toc_value; \/\/ value to be set to timeout counter$/;"	r
+top	uart_rfifo.v	/^reg	[fifo_pointer_w-1:0]	top;$/;"	r
+top	uart_tfifo.v	/^reg	[fifo_pointer_w-1:0]	top;$/;"	r
+top_plus_1	uart_rfifo.v	/^wire [fifo_pointer_w-1:0] top_plus_1 = top + 1'b1;$/;"	n
+top_plus_1	uart_tfifo.v	/^wire [fifo_pointer_w-1:0] top_plus_1 = top + 1'b1;$/;"	n
+trigger_level	uart_regs.v	/^reg [3:0] 								trigger_level; \/\/ trigger level of the receiver FIFO$/;"	r
+tstate	uart_debug_if.v	/^input [2:0] 							tstate;$/;"	p
+tstate	uart_regs.v	/^output [2:0] 							tstate;$/;"	p
+tstate	uart_regs.v	/^wire [2:0] 								tstate;$/;"	n
+tstate	uart_top.v	/^wire	[2:0] tstate;$/;"	n
+tstate	uart_transmitter.v	/^output [2:0] 								tstate;$/;"	p
+tstate	uart_transmitter.v	/^reg [2:0] 									tstate;$/;"	r
+tx_reset	uart_regs.v	/^reg 										tx_reset;$/;"	r
+tx_reset	uart_transmitter.v	/^input 										tx_reset;$/;"	p
+uart_addr_width	uart_top.v	/^parameter 							 uart_addr_width = `UART_ADDR_WIDTH;$/;"	c
+uart_data_width	uart_top.v	/^parameter 							 uart_data_width = `UART_DATA_WIDTH;$/;"	c
+uart_debug_if	uart_debug_if.v	/^module uart_debug_if (\/*AUTOARG*\/$/;"	m
+uart_receiver	uart_receiver.v	/^module uart_receiver (clk, wb_rst_i, lcr, rf_pop, srx_pad_i, enable, $/;"	m
+uart_regs	uart_regs.v	/^module uart_regs (clk,$/;"	m
+uart_rfifo	uart_rfifo.v	/^module uart_rfifo (clk, $/;"	m
+uart_sync_flops	uart_sync_flops.v	/^module uart_sync_flops$/;"	m
+uart_tfifo	uart_tfifo.v	/^module uart_tfifo (clk, $/;"	m
+uart_top	uart_top.v	/^module uart_top	($/;"	m
+uart_transmitter	uart_transmitter.v	/^module uart_transmitter (clk, wb_rst_i, lcr, tf_push, wb_dat_i, enable,	stx_pad_o, tstate, tf_count, tx_reset, lsr_mask);$/;"	m
+uart_wb	uart_wb.v	/^module uart_wb (clk, wb_rst_i, $/;"	m
+wb_ack_o	uart_top.v	/^output 								 wb_ack_o;$/;"	p
+wb_ack_o	uart_wb.v	/^output 		  wb_ack_o;$/;"	p
+wb_ack_o	uart_wb.v	/^reg 			  wb_ack_o;$/;"	r
+wb_addr_i	uart_regs.v	/^input [`UART_ADDR_WIDTH-1:0] 		wb_addr_i;$/;"	p
+wb_addr_i	uart_regs.v	/^wire [`UART_ADDR_WIDTH-1:0] 		wb_addr_i;$/;"	n
+wb_adr_i	uart_debug_if.v	/^input [`UART_ADDR_WIDTH-1:0] 		wb_adr_i;$/;"	p
+wb_adr_i	uart_debug_if.v	/^wire [`UART_ADDR_WIDTH-1:0] 		wb_adr_i;$/;"	n
+wb_adr_i	uart_top.v	/^input [uart_addr_width-1:0] 	 wb_adr_i;$/;"	p
+wb_adr_i	uart_top.v	/^wire [uart_addr_width-1:0] 	 wb_adr_i;$/;"	n
+wb_adr_i	uart_wb.v	/^input [`UART_ADDR_WIDTH-1:0] 	wb_adr_i; \/\/WISHBONE address line$/;"	p
+wb_adr_int	uart_top.v	/^wire [uart_addr_width-1:0] 	 wb_adr_int;$/;"	n
+wb_adr_int	uart_wb.v	/^output [`UART_ADDR_WIDTH-1:0]	wb_adr_int; \/\/ internal signal for address bus$/;"	p
+wb_adr_int	uart_wb.v	/^wire [`UART_ADDR_WIDTH-1:0]	wb_adr_int; \/\/ internal signal for address bus$/;"	n
+wb_adr_int_lsb	uart_wb.v	/^reg [1:0] wb_adr_int_lsb;$/;"	r
+wb_adr_is	uart_wb.v	/^reg [`UART_ADDR_WIDTH-1:0]	wb_adr_is;$/;"	r
+wb_clk_i	uart_top.v	/^input 								 wb_clk_i;$/;"	p
+wb_cyc_i	uart_top.v	/^input 								 wb_cyc_i;$/;"	p
+wb_cyc_i	uart_wb.v	/^input 		  wb_cyc_i;$/;"	p
+wb_cyc_is	uart_wb.v	/^reg 								wb_cyc_is;$/;"	r
+wb_dat32_o	uart_debug_if.v	/^output [31:0] 							wb_dat32_o;$/;"	p
+wb_dat32_o	uart_debug_if.v	/^reg [31:0] 								wb_dat32_o;$/;"	r
+wb_dat32_o	uart_top.v	/^wire [31:0] 						 wb_dat32_o; \/\/ debug interface 32-bit output$/;"	n
+wb_dat32_o	uart_wb.v	/^input [31:0]  wb_dat32_o; \/\/ 32 bit data output (for debug interface)$/;"	p
+wb_dat8_i	uart_top.v	/^wire [7:0] 							 wb_dat8_i; \/\/ 8-bit internal data input$/;"	n
+wb_dat8_i	uart_wb.v	/^output [7:0]  wb_dat8_i;$/;"	p
+wb_dat8_i	uart_wb.v	/^reg [7:0] 	  wb_dat8_i;$/;"	r
+wb_dat8_o	uart_top.v	/^wire [7:0] 							 wb_dat8_o; \/\/ 8-bit internal data output$/;"	n
+wb_dat8_o	uart_wb.v	/^input [7:0]   wb_dat8_o; \/\/ internal 8 bit output to be put into wb_dat_o$/;"	p
+wb_dat8_o	uart_wb.v	/^wire [7:0] 	  wb_dat8_o;$/;"	n
+wb_dat_i	uart_regs.v	/^input [7:0] 							wb_dat_i;$/;"	p
+wb_dat_i	uart_regs.v	/^wire [7:0] 								wb_dat_i;$/;"	n
+wb_dat_i	uart_top.v	/^input [uart_data_width-1:0] 	 wb_dat_i;$/;"	p
+wb_dat_i	uart_top.v	/^wire [uart_data_width-1:0] 	 wb_dat_i;$/;"	n
+wb_dat_i	uart_transmitter.v	/^input [7:0] 								wb_dat_i;$/;"	p
+wb_dat_i	uart_wb.v	/^input [31:0]  wb_dat_i; \/\/input WISHBONE bus $/;"	p
+wb_dat_i	uart_wb.v	/^input [7:0]  wb_dat_i; \/\/input WISHBONE bus $/;"	p
+wb_dat_i	uart_wb.v	/^wire [31:0]   wb_dat_i;$/;"	n
+wb_dat_i	uart_wb.v	/^wire [7:0] 	 wb_dat_i;$/;"	n
+wb_dat_is	uart_wb.v	/^reg [31:0] 	  wb_dat_is;$/;"	r
+wb_dat_is	uart_wb.v	/^reg [7:0] 	 wb_dat_is;$/;"	r
+wb_dat_o	uart_regs.v	/^output [7:0] 							wb_dat_o;$/;"	p
+wb_dat_o	uart_regs.v	/^reg [7:0] 								wb_dat_o;$/;"	r
+wb_dat_o	uart_top.v	/^output [uart_data_width-1:0] 	 wb_dat_o;$/;"	p
+wb_dat_o	uart_top.v	/^wire [uart_data_width-1:0] 	 wb_dat_o;$/;"	n
+wb_dat_o	uart_wb.v	/^output [31:0] wb_dat_o;$/;"	p
+wb_dat_o	uart_wb.v	/^output [7:0] wb_dat_o;$/;"	p
+wb_dat_o	uart_wb.v	/^reg [31:0] 	  wb_dat_o;$/;"	r
+wb_dat_o	uart_wb.v	/^reg [7:0] 	 wb_dat_o;$/;"	r
+wb_re_i	uart_regs.v	/^input 									wb_re_i;$/;"	p
+wb_rst_i	uart_receiver.v	/^input				wb_rst_i;$/;"	p
+wb_rst_i	uart_regs.v	/^input 									wb_rst_i;$/;"	p
+wb_rst_i	uart_rfifo.v	/^input				wb_rst_i;$/;"	p
+wb_rst_i	uart_tfifo.v	/^input				wb_rst_i;$/;"	p
+wb_rst_i	uart_top.v	/^input 								 wb_rst_i;$/;"	p
+wb_rst_i	uart_transmitter.v	/^input 										wb_rst_i;$/;"	p
+wb_rst_i	uart_wb.v	/^input 		  wb_rst_i;$/;"	p
+wb_sel_i	uart_top.v	/^input [3:0]							 wb_sel_i;$/;"	p
+wb_sel_i	uart_top.v	/^wire [3:0] 							 wb_sel_i;  \/\/ WISHBONE select signal$/;"	n
+wb_sel_i	uart_wb.v	/^input [3:0]   wb_sel_i;$/;"	p
+wb_sel_i	uart_wb.v	/^wire [3:0]   wb_sel_i;$/;"	n
+wb_sel_is	uart_wb.v	/^reg [3:0] 						wb_sel_is;$/;"	r
+wb_stb_i	uart_top.v	/^input 								 wb_stb_i;$/;"	p
+wb_stb_i	uart_wb.v	/^input 		  wb_stb_i;$/;"	p
+wb_stb_is	uart_wb.v	/^reg 								wb_stb_is;$/;"	r
+wb_we_i	uart_regs.v	/^input 									wb_we_i;$/;"	p
+wb_we_i	uart_top.v	/^input 								 wb_we_i;$/;"	p
+wb_we_i	uart_wb.v	/^input 		  wb_we_i;$/;"	p
+wb_we_is	uart_wb.v	/^reg 								wb_we_is;$/;"	r
+wbstate	uart_wb.v	/^reg [1:0] 	 wbstate;$/;"	r
+we	raminfr.v	/^input we;   $/;"	p
+we_o	uart_top.v	/^wire 									 we_o;	\/\/ Write enable for registers$/;"	n
+we_o	uart_wb.v	/^output 		  we_o;$/;"	p
+we_o	uart_wb.v	/^wire 			  we_o;$/;"	n
+width	uart_sync_flops.v	/^parameter width         = 1;$/;"	c
+word0	uart_rfifo.v	/^wire	[2:0]	word0 = fifo[0];$/;"	n
+word1	uart_rfifo.v	/^wire	[2:0]	word1 = fifo[1];$/;"	n
+word10	uart_rfifo.v	/^wire	[2:0]	word10 = fifo[10];$/;"	n
+word11	uart_rfifo.v	/^wire	[2:0]	word11 = fifo[11];$/;"	n
+word12	uart_rfifo.v	/^wire	[2:0]	word12 = fifo[12];$/;"	n
+word13	uart_rfifo.v	/^wire	[2:0]	word13 = fifo[13];$/;"	n
+word14	uart_rfifo.v	/^wire	[2:0]	word14 = fifo[14];$/;"	n
+word15	uart_rfifo.v	/^wire	[2:0]	word15 = fifo[15];$/;"	n
+word2	uart_rfifo.v	/^wire	[2:0]	word2 = fifo[2];$/;"	n
+word3	uart_rfifo.v	/^wire	[2:0]	word3 = fifo[3];$/;"	n
+word4	uart_rfifo.v	/^wire	[2:0]	word4 = fifo[4];$/;"	n
+word5	uart_rfifo.v	/^wire	[2:0]	word5 = fifo[5];$/;"	n
+word6	uart_rfifo.v	/^wire	[2:0]	word6 = fifo[6];$/;"	n
+word7	uart_rfifo.v	/^wire	[2:0]	word7 = fifo[7];$/;"	n
+word8	uart_rfifo.v	/^wire	[2:0]	word8 = fifo[8];$/;"	n
+word9	uart_rfifo.v	/^wire	[2:0]	word9 = fifo[9];$/;"	n
+wre	uart_wb.v	/^reg 			 wre ;\/\/ timing control signal for write or read enable$/;"	r
