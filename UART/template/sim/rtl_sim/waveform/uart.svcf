@@ -1,0 +1,130 @@
+# SimVision Command Script (Mon Nov 12 04:22:13 PM KST 2012)
+#
+# Version 08.20.p001
+#
+# You can restore this configuration with:
+#
+#     simvision -input /home/member/djyoon/Project/Peripheral/UART/template/sim/rtl_sim/uart.svcf
+#  or simvision -input /home/member/djyoon/Project/Peripheral/UART/template/sim/rtl_sim/uart.svcf database1 database2 ...
+#
+
+
+#
+# preferences
+#
+preferences set toolbar-txe_waveform_toggle-WaveWindow {
+  usual
+  position -pos 1
+}
+preferences set toolbar-Windows-WaveWindow {
+  usual
+  position -anchor w
+}
+preferences set toolbar-WaveZoom-WaveWindow {
+  usual
+  position -pos 1
+}
+
+#
+# databases
+#
+array set dbNames ""
+set dbNames(usedName1) PLATFORM_TOP
+set dbNames(realName1) [ database require PLATFORM_TOP -hints {
+	file ./PLATFORM_TOP.shm/PLATFORM_TOP.trn
+	file /home/member/djyoon/Project/Peripheral/UART/template/sim/rtl_sim/PLATFORM_TOP.shm/PLATFORM_TOP.trn
+}]
+if {$dbNames(realName1) == ""} {
+    set dbNames(realName1) $dbNames(usedName1)
+}
+
+#
+# cursors
+#
+set time 1404620000ps
+if {[catch {cursor new -name  TimeA -time $time}] != ""} {
+    cursor set -using TimeA -time $time
+}
+
+#
+# mmaps
+#
+mmap new -reuse -name {Boolean as Logic} -radix %b -contents {
+{%c=FALSE -edgepriority 1 -shape low}
+{%c=TRUE -edgepriority 1 -shape high}
+}
+mmap new -reuse -name {Example Map} -radix %x -contents {
+{%b=11???? -bgcolor orange -label REG:%x -linecolor yellow -shape bus}
+{%x=1F -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=2C -bgcolor red -label ERROR -linecolor white -shape EVENT}
+{%x=* -label %x -linecolor gray -shape bus}
+}
+
+#
+# Design Browser windows
+#
+if {[catch {window new WatchList -name "Design Browser 1" -geometry 1558x883+0+22}] != ""} {
+    window geometry "Design Browser 1" 1558x883+0+22
+}
+window target "Design Browser 1" on
+browser using {Design Browser 1}
+browser set \
+    -scope PLATFORM_TOP::TB_TOP.platform_top_inst
+browser yview see PLATFORM_TOP::TB_TOP.platform_top_inst
+browser timecontrol set -lock 0
+
+#
+# Waveform windows
+#
+if {[catch {window new WaveWindow -name "Waveform 1" -geometry 1920x1036+0+22}] != ""} {
+    window geometry "Waveform 1" 1920x1036+0+22
+}
+window target "Waveform 1" on
+waveform using {Waveform 1}
+waveform sidebar select designbrowser
+waveform set \
+    -primarycursor TimeA \
+    -signalnames name \
+    -signalwidth 175 \
+    -units ns \
+    -valuewidth 75
+cursor set -using TimeA -time 1,404,620,000ps
+waveform baseline set -time 0
+
+set id [waveform add -signals [list PLATFORM_TOP::TB_TOP.platform_top_inst.CLK \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.nRST \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.BOOT_END \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.PSEL1 \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.PENABLE \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.PWRITE \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.PADDR[31:0]} \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.PWDATA[31:0]} \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.PRDATA1[31:0]} \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.UART_rx \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.UART_tx \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.PCLK \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.UART_CLK \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.iBaud16 \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.uBaudRateGen.CLK \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.uUartReg.IBRD[31:0]} \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.uBaudRateGen.iBaudRateCnt[15:0]} \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.iUARTEn \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.uUartReg.LCR[31:0]} \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.uUartReg.FCR[31:0]} \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.uUartReg.ER[31:0]} \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.uUartReg.SR[31:0]} \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.TXD \
+	PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.RXD \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.iTxData[7:0]} \
+	{PLATFORM_TOP::TB_TOP.platform_top_inst.SLV_APB_UART_inst.uUartTxCtrl.TxState[2:0]} ]]
+
+waveform xview limits 1293884.613ns 1918890.181ns
+
+#
+# Console window
+#
+console set -windowname Console
+
+# Restore the proper database name(s)
+
+::database set -using $dbNames(usedName1) -name $dbNames(realName1)

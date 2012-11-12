@@ -1,0 +1,89 @@
+
+ASM:     file format elf32-corea
+
+Disassembly of section .text:
+
+00008000 <.text>:
+    8000:	30000006 	j 	0x6	801c <RST_HANDLER>
+    8004:	30000011 	j 	0x11	804c <DFT_HANDLER>
+    8008:	30000011 	j 	0x11	8050 <UDI_HANDLER>
+    800c:	30000011 	j 	0x11	8054 <SWI_HANDLER>
+    8010:	30000011 	j 	0x11	8058 <EXT_HANDLER>
+    8014:	30000022 	j 	0x22	80a0 <IFT_HANDLER>
+    8018:	30000022 	j 	0x22	80a4 <CPI_HANDLER>
+    801c:	200020f0 	mui	0x20f0
+    8020:	0c600040 	movi.al	r0, concat(0x0)
+    8024:	1c610500 	movi.al	r1, 0x500
+    8028:	1c620002 	movi.al	r2, 0x2
+    802c:	53201008 	st.w	r1, (r0 + 0x8)
+    8030:	53202004 	st.w	r2, (r0 + 0x4)
+    8034:	1c6d0000 	movi.al	eparam, 0x0
+    8038:	1c6e0000 	movi.al	epc, 0x0
+    803c:	1c6f0000 	movi.al	ra, 0x0
+    8040:	1c6a0005 	movi.al	fp, 0x5
+    8044:	310003ee 	j 1,	0x3ee	9000 <main>
+    8048:	240a0005 	mtps	fp
+    804c:	420e0000 	rfi
+    8050:	420e0000 	rfi
+    8054:	420e0000 	rfi
+    8058:	200020f0 	mui	0x20f0
+    805c:	0c600040 	movi.al	r0, concat(0x0)
+    8060:	57201004 	ld.w	r1, (r0 + 0x4)
+    8064:	0c620fa1 	movi.al	r2, shl(0x1,31)
+    8068:	23a12020 	tand	r1, shl(r2,0)
+    806c:	b6100004 	call.ne+ 	0x4	8080 <TIME_INT>
+    8070:	0c620f21 	movi.al	r2, shl(0x1,30)
+    8074:	23a12020 	tand	r1, shl(r2,0)
+    8078:	b6100005 	call.ne+ 	0x5	8090 <EXT_INT>
+    807c:	420e0000 	rfi
+    8080:	26312023 	xor	r3, r1, shl(r2,0)
+    8084:	53203004 	st.w	r3, (r0 + 0x4)
+    8088:	396f0000 	br.al 1,	ra
+    808c:	24613020 	mov.al	r1, shl(r3,0)
+    8090:	26312023 	xor	r3, r1, shl(r2,0)
+    8094:	53203004 	st.w	r3, (r0 + 0x4)
+    8098:	396f0000 	br.al 1,	ra
+    809c:	24613020 	mov.al	r1, shl(r3,0)
+    80a0:	420e0000 	rfi
+    80a4:	420e0000 	rfi
+	...
+    9000:	20001000 	mui	0x1000
+    9004:	0c600040 	movi.al	r0, concat(0x0)
+    9008:	20000000 	mui	0x0
+    900c:	0c62005b 	movi.al	r2, concat(0x1b)
+    9010:	5320201c 	st.w	r2, (r0 + 0x1c)
+    9014:	20000000 	mui	0x0
+    9018:	0c631058 	movi.al	r3, concat(0x38)
+    901c:	53203004 	st.w	r3, (r0 + 0x4)
+    9020:	20000000 	mui	0x0
+    9024:	0c64604c 	movi.al	r4, concat(0xcc)
+    9028:	53204008 	st.w	r4, (r0 + 0x8)
+    902c:	20000000 	mui	0x0
+    9030:	0c65004f 	movi.al	r5, concat(0xf)
+    9034:	53205014 	st.w	r5, (r0 + 0x14)
+    9038:	20000000 	mui	0x0
+    903c:	0c660047 	movi.al	r6, concat(0x7)
+    9040:	20000000 	mui	0x0
+    9044:	0c660047 	movi.al	r6, concat(0x7)
+    9048:	20000000 	mui	0x0
+    904c:	0c660047 	movi.al	r6, concat(0x7)
+    9050:	20000000 	mui	0x0
+    9054:	0c660047 	movi.al	r6, concat(0x7)
+    9058:	20000000 	mui	0x0
+    905c:	0c660047 	movi.al	r6, concat(0x7)
+    9060:	20000000 	mui	0x0
+    9064:	0c610047 	movi.al	r1, concat(0x7)
+    9068:	5320100c 	st.w	r1, (r0 + 0xc)
+    906c:	20000000 	mui	0x0
+    9070:	0c671054 	movi.al	r7, concat(0x34)
+    9074:	53207000 	st.w	r7, (r0 + 0x0)
+    9078:	0c660047 	movi.al	r6, concat(0x7)
+    907c:	20000000 	mui	0x0
+    9080:	0c660047 	movi.al	r6, concat(0x7)
+    9084:	20000000 	mui	0x0
+    9088:	0c660047 	movi.al	r6, concat(0x7)
+    908c:	20000000 	mui	0x0
+    9090:	0c681041 	movi.al	r8, concat(0x21)
+    9094:	53208000 	st.w	r8, (r0 + 0x0)
+    9098:	30ffffff 	j 	0xffffff	9098 <MAIN_END>
+    909c:	10000000 	addi	r0, r0, 0

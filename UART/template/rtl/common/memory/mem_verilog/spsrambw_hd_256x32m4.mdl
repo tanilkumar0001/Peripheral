@@ -1,0 +1,3401 @@
+
+
+/****************************************************************************
+
+                                                               copyright 2001
+                                                     SAMSUNG Electronics corp.
+                                                          all rights reserved.
+
+   -- LIBRARY         : STD150E
+   -- LANGUAGE        : Verilog-HDL
+   -- MEMORY TYPE     : spsram :SINGLE PORT SYNCHRONOUS RAM - BIT WRITE.
+   -- CONFIGURATION   : Depth=256, Bits=32, Ymux=4.
+   -- AUTHOR(S)       : Dae Seo, Cha
+   -- REVISION        : 2001.08.30 (V1.0)
+   -- FILE NAME       : spsrambw_hd_256x32m4.mdlp
+
+----------------------------------------------------------------------------
+   Single Port Synchronous RAM WITH :
+
+      CK   clock input (this is actually clock)
+      A    address port
+      DI   data input
+      DOUT data output
+      CSN  active low chip select (power down)
+      WEN  active low write enable
+      BWEN active low bit write enable
+      OEN  active low output drive enable (tri-state outputs)
+ 
+      word_width   default word width (= 8)
+      word_depth   default RAM depth (= 32)
+      addr_width   default address width (= 5)
+
+Note : 1. For faster data loading operations, PRE-DATA-LOAD routine has been
+            provided.
+            MEMORY_DATA_FILE parameter is used to specify the name of the data file
+            to be loaded. It is initialized to a NULL value.
+            To use this capability, Please refer to Memory Simulation Guide:
+            $sec_verilog(vcs)/documentation/memory_guide.ps
+         2. To suppress input unknown related warning message,
+            use +define+no_mem_message 
+         3. To simulate every 1ps(timescale 1ns/1ps),
+            use +define+opt_ts_1ps 
+
+----------------------------------------------------------------------------------------------------------------------
+The confidential and proprietary information contained in this file may only be used by a person 
+authorised under and to the extent permitted by a subsisting licensing agreement from Samsung Electronics.
+
+This entire notice must be reproduced on all copies of this file and copies of this file may only be made by a person 
+if such person is permitted to do so under the terms of a subsisting license agreement from Samsung Electronics.
+
+Modification of this file is not permitted for any one and any case. 
+
+Samsung Electronics has no responsibility for any problem caused by unpermitted modification of this file.
+
+***************************************************************************/
+
+ `ifdef opt_ts_1ps
+    `timescale 1ns / 1ps
+ `else
+    `timescale 1ns / 10ps
+ `endif
+// support for Verifault
+`suppress_faults
+`enable_portfaults
+
+// required for SDF back-annotation
+`celldefine
+
+module spsrambw_hd_256x32m4 (CK, CSN, WEN, OEN, A, BWEN, DI, DOUT);
+
+   // these define the size of the ram
+   parameter
+      word_width  =  32, 
+      word_depth  =  256, 
+      addr_width  =  8; 
+
+   parameter
+      wordx            = 32'bxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ,
+      wordz            = 32'bzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz ,
+      addrx            = 8'bxxxxxxxx ;
+
+   output [word_width-1:0] DOUT;
+   input  [word_width-1:0] DI;
+   input  [word_width-1:0] BWEN;
+   input  [addr_width-1:0] A;
+ 
+   input  CSN, OEN, WEN, CK;
+ 
+   reg  [addr_width-1:0] Ax;        // internal address register
+   reg  [word_width-1:0] DIx;       // internal data register
+   wire [word_width-1:0] DOUTx;     // internal output register
+   wire [word_width-1:0] di_int;    // internal data
+   wire [word_width-1:0] bwen_int;  // internal bwen
+   wire [addr_width-1:0] addr_int;  // internal address
+   reg [word_width-1:0] di_tmp,retained_mem;  // internal address
+
+   integer i; // index variable
+ 
+   reg [word_width-1:0] mem[0:word_depth-1],  // RAM array
+                           outreg,outreg_tmp;   // outreg_tmp for oen low operation
+ 
+   reg VIO_A_CK_SU, VIO_CK_A_HD,       // ADDR to CK setup & hold violation routine
+       VIO_DI_CK_SU, VIO_CK_DI_HD,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_0, VIO_CK_DI_HD_0,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_1, VIO_CK_DI_HD_1,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_2, VIO_CK_DI_HD_2,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_3, VIO_CK_DI_HD_3,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_4, VIO_CK_DI_HD_4,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_5, VIO_CK_DI_HD_5,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_6, VIO_CK_DI_HD_6,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_7, VIO_CK_DI_HD_7,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_8, VIO_CK_DI_HD_8,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_9, VIO_CK_DI_HD_9,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_10, VIO_CK_DI_HD_10,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_11, VIO_CK_DI_HD_11,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_12, VIO_CK_DI_HD_12,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_13, VIO_CK_DI_HD_13,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_14, VIO_CK_DI_HD_14,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_15, VIO_CK_DI_HD_15,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_16, VIO_CK_DI_HD_16,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_17, VIO_CK_DI_HD_17,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_18, VIO_CK_DI_HD_18,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_19, VIO_CK_DI_HD_19,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_20, VIO_CK_DI_HD_20,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_21, VIO_CK_DI_HD_21,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_22, VIO_CK_DI_HD_22,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_23, VIO_CK_DI_HD_23,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_24, VIO_CK_DI_HD_24,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_25, VIO_CK_DI_HD_25,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_26, VIO_CK_DI_HD_26,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_27, VIO_CK_DI_HD_27,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_28, VIO_CK_DI_HD_28,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_29, VIO_CK_DI_HD_29,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_30, VIO_CK_DI_HD_30,     // DI to CK setup & hold violation routine
+       VIO_DI_CK_SU_31, VIO_CK_DI_HD_31,     // DI to CK setup & hold violation routine
+       VIO_WEN_CK_SU, VIO_CK_WEN_HD,   // WEN to CK hold time violation routine
+       VIO_CSN_CK_SU, VIO_CK_CSN_HD,   // CSN to CK setup/hold time violation routine
+       VIO_CK_PWL, VIO_CK_PWH,         // CK pulse width low, high violation
+       VIO_BWEN_CK_SU_0, VIO_CK_BWEN_HD_0,
+       VIO_BWEN_CK_SU_1, VIO_CK_BWEN_HD_1,
+       VIO_BWEN_CK_SU_2, VIO_CK_BWEN_HD_2,
+       VIO_BWEN_CK_SU_3, VIO_CK_BWEN_HD_3,
+       VIO_BWEN_CK_SU_4, VIO_CK_BWEN_HD_4,
+       VIO_BWEN_CK_SU_5, VIO_CK_BWEN_HD_5,
+       VIO_BWEN_CK_SU_6, VIO_CK_BWEN_HD_6,
+       VIO_BWEN_CK_SU_7, VIO_CK_BWEN_HD_7,
+       VIO_BWEN_CK_SU_8, VIO_CK_BWEN_HD_8,
+       VIO_BWEN_CK_SU_9, VIO_CK_BWEN_HD_9,
+       VIO_BWEN_CK_SU_10, VIO_CK_BWEN_HD_10,
+       VIO_BWEN_CK_SU_11, VIO_CK_BWEN_HD_11,
+       VIO_BWEN_CK_SU_12, VIO_CK_BWEN_HD_12,
+       VIO_BWEN_CK_SU_13, VIO_CK_BWEN_HD_13,
+       VIO_BWEN_CK_SU_14, VIO_CK_BWEN_HD_14,
+       VIO_BWEN_CK_SU_15, VIO_CK_BWEN_HD_15,
+       VIO_BWEN_CK_SU_16, VIO_CK_BWEN_HD_16,
+       VIO_BWEN_CK_SU_17, VIO_CK_BWEN_HD_17,
+       VIO_BWEN_CK_SU_18, VIO_CK_BWEN_HD_18,
+       VIO_BWEN_CK_SU_19, VIO_CK_BWEN_HD_19,
+       VIO_BWEN_CK_SU_20, VIO_CK_BWEN_HD_20,
+       VIO_BWEN_CK_SU_21, VIO_CK_BWEN_HD_21,
+       VIO_BWEN_CK_SU_22, VIO_CK_BWEN_HD_22,
+       VIO_BWEN_CK_SU_23, VIO_CK_BWEN_HD_23,
+       VIO_BWEN_CK_SU_24, VIO_CK_BWEN_HD_24,
+       VIO_BWEN_CK_SU_25, VIO_CK_BWEN_HD_25,
+       VIO_BWEN_CK_SU_26, VIO_CK_BWEN_HD_26,
+       VIO_BWEN_CK_SU_27, VIO_CK_BWEN_HD_27,
+       VIO_BWEN_CK_SU_28, VIO_CK_BWEN_HD_28,
+       VIO_BWEN_CK_SU_29, VIO_CK_BWEN_HD_29,
+       VIO_BWEN_CK_SU_30, VIO_CK_BWEN_HD_30,
+       VIO_BWEN_CK_SU_31, VIO_CK_BWEN_HD_31,
+       VIO_BWEN_CK_SU, VIO_CK_BWEN_HD,  // BWEN to CK setup/hold time violation
+       VIO_CK_CYC,                     // CK pulse width low, high violation.
+       ValidA;                         // address out-of-range flag
+    reg    VIO_FALSE;
+   reg lastCK;
+   reg [addr_width-1:0] lastAx;        // internal address register
+   reg [word_width-1:0] latched_bwen;  // bwen latch on clock rising
+   reg csn_reg;
+   reg oen_reg;       // For three-state enable
+   wire csn_wire;     // For timing checks in csn_latch 
+    reg   check_false;
+    wire  check_false_w;
+   reg latched_wen;
+   reg invalid_flag;
+   event e_CK_CHANGE;
+ 
+   reg [addr_width - 1:0] alatch;  // input address latch
+
+/****************** PRE-DATA-LOAD ROUTINE **********************/
+ 
+ parameter MEMORY_DATA_FILE = "";
+ 
+ initial
+ if (MEMORY_DATA_FILE != "") begin
+    $readmemb(MEMORY_DATA_FILE, mem);
+    $display(">> Note : RAM instance, %m is running with an external data file called %s.",MEMORY_DATA_FILE);
+    $display("          This PRE-DATA-LOADING feature is used for faster data loading of RAM");
+    $display("          to reduce simulation run time. But, Please remember this :");
+    $display("          Because this behavior is not identical with physical memory operation,");
+    $display("          this feature should not be used in real simulation.");
+    $display("");
+ end
+ 
+/****************************************************************/
+ 
+// For MIPD
+   buf #0 (wen_int, WEN);
+   buf #0 (clk_int, CK);
+   buf #0 (csn_int, CSN);
+   buf #0 (oen_int, OEN); 
+
+   or (CSN_WEN, csn_int, wen_int);
+
+   bufif0 (DOUT[0], DOUTx[0], oen_reg);
+   bufif0 (DOUT[1], DOUTx[1], oen_reg);
+   bufif0 (DOUT[2], DOUTx[2], oen_reg);
+   bufif0 (DOUT[3], DOUTx[3], oen_reg);
+   bufif0 (DOUT[4], DOUTx[4], oen_reg);
+   bufif0 (DOUT[5], DOUTx[5], oen_reg);
+   bufif0 (DOUT[6], DOUTx[6], oen_reg);
+   bufif0 (DOUT[7], DOUTx[7], oen_reg);
+   bufif0 (DOUT[8], DOUTx[8], oen_reg);
+   bufif0 (DOUT[9], DOUTx[9], oen_reg);
+   bufif0 (DOUT[10], DOUTx[10], oen_reg);
+   bufif0 (DOUT[11], DOUTx[11], oen_reg);
+   bufif0 (DOUT[12], DOUTx[12], oen_reg);
+   bufif0 (DOUT[13], DOUTx[13], oen_reg);
+   bufif0 (DOUT[14], DOUTx[14], oen_reg);
+   bufif0 (DOUT[15], DOUTx[15], oen_reg);
+   bufif0 (DOUT[16], DOUTx[16], oen_reg);
+   bufif0 (DOUT[17], DOUTx[17], oen_reg);
+   bufif0 (DOUT[18], DOUTx[18], oen_reg);
+   bufif0 (DOUT[19], DOUTx[19], oen_reg);
+   bufif0 (DOUT[20], DOUTx[20], oen_reg);
+   bufif0 (DOUT[21], DOUTx[21], oen_reg);
+   bufif0 (DOUT[22], DOUTx[22], oen_reg);
+   bufif0 (DOUT[23], DOUTx[23], oen_reg);
+   bufif0 (DOUT[24], DOUTx[24], oen_reg);
+   bufif0 (DOUT[25], DOUTx[25], oen_reg);
+   bufif0 (DOUT[26], DOUTx[26], oen_reg);
+   bufif0 (DOUT[27], DOUTx[27], oen_reg);
+   bufif0 (DOUT[28], DOUTx[28], oen_reg);
+   bufif0 (DOUT[29], DOUTx[29], oen_reg);
+   bufif0 (DOUT[30], DOUTx[30], oen_reg);
+   bufif0 (DOUT[31], DOUTx[31], oen_reg);
+
+   buf #0 (di_int[0], DI[0]);
+   buf #0 (di_int[1], DI[1]);
+   buf #0 (di_int[2], DI[2]);
+   buf #0 (di_int[3], DI[3]);
+   buf #0 (di_int[4], DI[4]);
+   buf #0 (di_int[5], DI[5]);
+   buf #0 (di_int[6], DI[6]);
+   buf #0 (di_int[7], DI[7]);
+   buf #0 (di_int[8], DI[8]);
+   buf #0 (di_int[9], DI[9]);
+   buf #0 (di_int[10], DI[10]);
+   buf #0 (di_int[11], DI[11]);
+   buf #0 (di_int[12], DI[12]);
+   buf #0 (di_int[13], DI[13]);
+   buf #0 (di_int[14], DI[14]);
+   buf #0 (di_int[15], DI[15]);
+   buf #0 (di_int[16], DI[16]);
+   buf #0 (di_int[17], DI[17]);
+   buf #0 (di_int[18], DI[18]);
+   buf #0 (di_int[19], DI[19]);
+   buf #0 (di_int[20], DI[20]);
+   buf #0 (di_int[21], DI[21]);
+   buf #0 (di_int[22], DI[22]);
+   buf #0 (di_int[23], DI[23]);
+   buf #0 (di_int[24], DI[24]);
+   buf #0 (di_int[25], DI[25]);
+   buf #0 (di_int[26], DI[26]);
+   buf #0 (di_int[27], DI[27]);
+   buf #0 (di_int[28], DI[28]);
+   buf #0 (di_int[29], DI[29]);
+   buf #0 (di_int[30], DI[30]);
+   buf #0 (di_int[31], DI[31]);
+   buf #0 (bwen_int[0], BWEN[0]);
+   buf #0 (bwen_int[1], BWEN[1]);
+   buf #0 (bwen_int[2], BWEN[2]);
+   buf #0 (bwen_int[3], BWEN[3]);
+   buf #0 (bwen_int[4], BWEN[4]);
+   buf #0 (bwen_int[5], BWEN[5]);
+   buf #0 (bwen_int[6], BWEN[6]);
+   buf #0 (bwen_int[7], BWEN[7]);
+   buf #0 (bwen_int[8], BWEN[8]);
+   buf #0 (bwen_int[9], BWEN[9]);
+   buf #0 (bwen_int[10], BWEN[10]);
+   buf #0 (bwen_int[11], BWEN[11]);
+   buf #0 (bwen_int[12], BWEN[12]);
+   buf #0 (bwen_int[13], BWEN[13]);
+   buf #0 (bwen_int[14], BWEN[14]);
+   buf #0 (bwen_int[15], BWEN[15]);
+   buf #0 (bwen_int[16], BWEN[16]);
+   buf #0 (bwen_int[17], BWEN[17]);
+   buf #0 (bwen_int[18], BWEN[18]);
+   buf #0 (bwen_int[19], BWEN[19]);
+   buf #0 (bwen_int[20], BWEN[20]);
+   buf #0 (bwen_int[21], BWEN[21]);
+   buf #0 (bwen_int[22], BWEN[22]);
+   buf #0 (bwen_int[23], BWEN[23]);
+   buf #0 (bwen_int[24], BWEN[24]);
+   buf #0 (bwen_int[25], BWEN[25]);
+   buf #0 (bwen_int[26], BWEN[26]);
+   buf #0 (bwen_int[27], BWEN[27]);
+   buf #0 (bwen_int[28], BWEN[28]);
+   buf #0 (bwen_int[29], BWEN[29]);
+   buf #0 (bwen_int[30], BWEN[30]);
+   buf #0 (bwen_int[31], BWEN[31]);
+ 
+   buf #0 (addr_int[0], A[0]);
+   buf #0 (addr_int[1], A[1]);
+   buf #0 (addr_int[2], A[2]);
+   buf #0 (addr_int[3], A[3]);
+   buf #0 (addr_int[4], A[4]);
+   buf #0 (addr_int[5], A[5]);
+   buf #0 (addr_int[6], A[6]);
+   buf #0 (addr_int[7], A[7]);
+   or (CSN_WEN_BWEN0, csn_int, wen_int, bwen_int[0]);
+   or (CSN_WEN_BWEN1, csn_int, wen_int, bwen_int[1]);
+   or (CSN_WEN_BWEN2, csn_int, wen_int, bwen_int[2]);
+   or (CSN_WEN_BWEN3, csn_int, wen_int, bwen_int[3]);
+   or (CSN_WEN_BWEN4, csn_int, wen_int, bwen_int[4]);
+   or (CSN_WEN_BWEN5, csn_int, wen_int, bwen_int[5]);
+   or (CSN_WEN_BWEN6, csn_int, wen_int, bwen_int[6]);
+   or (CSN_WEN_BWEN7, csn_int, wen_int, bwen_int[7]);
+   or (CSN_WEN_BWEN8, csn_int, wen_int, bwen_int[8]);
+   or (CSN_WEN_BWEN9, csn_int, wen_int, bwen_int[9]);
+   or (CSN_WEN_BWEN10, csn_int, wen_int, bwen_int[10]);
+   or (CSN_WEN_BWEN11, csn_int, wen_int, bwen_int[11]);
+   or (CSN_WEN_BWEN12, csn_int, wen_int, bwen_int[12]);
+   or (CSN_WEN_BWEN13, csn_int, wen_int, bwen_int[13]);
+   or (CSN_WEN_BWEN14, csn_int, wen_int, bwen_int[14]);
+   or (CSN_WEN_BWEN15, csn_int, wen_int, bwen_int[15]);
+   or (CSN_WEN_BWEN16, csn_int, wen_int, bwen_int[16]);
+   or (CSN_WEN_BWEN17, csn_int, wen_int, bwen_int[17]);
+   or (CSN_WEN_BWEN18, csn_int, wen_int, bwen_int[18]);
+   or (CSN_WEN_BWEN19, csn_int, wen_int, bwen_int[19]);
+   or (CSN_WEN_BWEN20, csn_int, wen_int, bwen_int[20]);
+   or (CSN_WEN_BWEN21, csn_int, wen_int, bwen_int[21]);
+   or (CSN_WEN_BWEN22, csn_int, wen_int, bwen_int[22]);
+   or (CSN_WEN_BWEN23, csn_int, wen_int, bwen_int[23]);
+   or (CSN_WEN_BWEN24, csn_int, wen_int, bwen_int[24]);
+   or (CSN_WEN_BWEN25, csn_int, wen_int, bwen_int[25]);
+   or (CSN_WEN_BWEN26, csn_int, wen_int, bwen_int[26]);
+   or (CSN_WEN_BWEN27, csn_int, wen_int, bwen_int[27]);
+   or (CSN_WEN_BWEN28, csn_int, wen_int, bwen_int[28]);
+   or (CSN_WEN_BWEN29, csn_int, wen_int, bwen_int[29]);
+   or (CSN_WEN_BWEN30, csn_int, wen_int, bwen_int[30]);
+   or (CSN_WEN_BWEN31, csn_int, wen_int, bwen_int[31]);
+
+  `protect
+   `ifdef functional_mode
+   `else
+      // only include timing checks during behavioural modelling
+   specify
+      specparam
+      clk_cyc= 0.01,   // CK cycle time
+      minckh = 0.01 ,  // CK pulse width high
+      minckl = 0.01 ,  // CK pulse width low
+      tcsck  = 0.01 ,  // CSN to CK setup time
+      tckcs  = 0.01 ,  // CK to CSN hold time
+      tweck  = 0.01 ,  // WEN to CK setup time
+      tckwe  = 0.01 ,  // CK to WEN hold time
+      tadck  = 0.01 ,  // ADDR to CK setup time
+      tckad  = 0.01 ,  // CK to ADDR hold time
+      tdick  = 0.01 ,  // DI to CK setup time
+      tbwenck= 0.01 ,  // BWEN to CK setup time
+      tckbwen= 0.01 ,  // CK to BWEN hold time
+      tckdi  = 0.01 ;  // CK to DI hold time
+
+      $width  (posedge CK &&& CSN == 1'b0, minckh, 0, VIO_CK_PWH);
+      $width  (negedge CK &&& csn_wire == 1'b0, minckl, 0, VIO_CK_PWL);
+      $period (posedge CK &&& CSN == 1'b0, clk_cyc, VIO_CK_CYC);
+
+      $setup (posedge CSN, posedge CK, tcsck, VIO_CSN_CK_SU);
+      $hold  (posedge CK, posedge CSN, tckcs, VIO_CK_CSN_HD);
+      $setup (negedge CSN, posedge CK, tcsck, VIO_CSN_CK_SU);
+      $hold  (posedge CK, negedge CSN, tckcs, VIO_CK_CSN_HD);
+
+      $setup (posedge WEN, posedge CK &&& CSN == 0, tweck,   VIO_WEN_CK_SU); 
+      $hold  (posedge CK &&& CSN == 0, posedge WEN, tckwe,   VIO_CK_WEN_HD); 
+      $setup (negedge WEN, posedge CK &&& CSN == 0, tweck,   VIO_WEN_CK_SU); 
+      $hold  (posedge CK &&& CSN == 0, negedge WEN, tckwe,   VIO_CK_WEN_HD); 
+
+      $setup (A[0], posedge CK &&& CSN == 0, tadck, VIO_A_CK_SU);
+      $hold (posedge CK &&& CSN == 0, A[0], tckad, VIO_CK_A_HD);
+      $setup (A[1], posedge CK &&& CSN == 0, tadck, VIO_A_CK_SU);
+      $hold (posedge CK &&& CSN == 0, A[1], tckad, VIO_CK_A_HD);
+      $setup (A[2], posedge CK &&& CSN == 0, tadck, VIO_A_CK_SU);
+      $hold (posedge CK &&& CSN == 0, A[2], tckad, VIO_CK_A_HD);
+      $setup (A[3], posedge CK &&& CSN == 0, tadck, VIO_A_CK_SU);
+      $hold (posedge CK &&& CSN == 0, A[3], tckad, VIO_CK_A_HD);
+      $setup (A[4], posedge CK &&& CSN == 0, tadck, VIO_A_CK_SU);
+      $hold (posedge CK &&& CSN == 0, A[4], tckad, VIO_CK_A_HD);
+      $setup (A[5], posedge CK &&& CSN == 0, tadck, VIO_A_CK_SU);
+      $hold (posedge CK &&& CSN == 0, A[5], tckad, VIO_CK_A_HD);
+      $setup (A[6], posedge CK &&& CSN == 0, tadck, VIO_A_CK_SU);
+      $hold (posedge CK &&& CSN == 0, A[6], tckad, VIO_CK_A_HD);
+      $setup (A[7], posedge CK &&& CSN == 0, tadck, VIO_A_CK_SU);
+      $hold (posedge CK &&& CSN == 0, A[7], tckad, VIO_CK_A_HD);
+
+      $setup  (DI[0], posedge CK &&& CSN_WEN_BWEN0 == 0, tdick, VIO_DI_CK_SU_0 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN0 == 0, DI[0], tckdi, VIO_CK_DI_HD_0 );
+      $setup  (DI[1], posedge CK &&& CSN_WEN_BWEN1 == 0, tdick, VIO_DI_CK_SU_1 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN1 == 0, DI[1], tckdi, VIO_CK_DI_HD_1 );
+      $setup  (DI[2], posedge CK &&& CSN_WEN_BWEN2 == 0, tdick, VIO_DI_CK_SU_2 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN2 == 0, DI[2], tckdi, VIO_CK_DI_HD_2 );
+      $setup  (DI[3], posedge CK &&& CSN_WEN_BWEN3 == 0, tdick, VIO_DI_CK_SU_3 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN3 == 0, DI[3], tckdi, VIO_CK_DI_HD_3 );
+      $setup  (DI[4], posedge CK &&& CSN_WEN_BWEN4 == 0, tdick, VIO_DI_CK_SU_4 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN4 == 0, DI[4], tckdi, VIO_CK_DI_HD_4 );
+      $setup  (DI[5], posedge CK &&& CSN_WEN_BWEN5 == 0, tdick, VIO_DI_CK_SU_5 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN5 == 0, DI[5], tckdi, VIO_CK_DI_HD_5 );
+      $setup  (DI[6], posedge CK &&& CSN_WEN_BWEN6 == 0, tdick, VIO_DI_CK_SU_6 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN6 == 0, DI[6], tckdi, VIO_CK_DI_HD_6 );
+      $setup  (DI[7], posedge CK &&& CSN_WEN_BWEN7 == 0, tdick, VIO_DI_CK_SU_7 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN7 == 0, DI[7], tckdi, VIO_CK_DI_HD_7 );
+      $setup  (DI[8], posedge CK &&& CSN_WEN_BWEN8 == 0, tdick, VIO_DI_CK_SU_8 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN8 == 0, DI[8], tckdi, VIO_CK_DI_HD_8 );
+      $setup  (DI[9], posedge CK &&& CSN_WEN_BWEN9 == 0, tdick, VIO_DI_CK_SU_9 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN9 == 0, DI[9], tckdi, VIO_CK_DI_HD_9 );
+      $setup  (DI[10], posedge CK &&& CSN_WEN_BWEN10 == 0, tdick, VIO_DI_CK_SU_10 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN10 == 0, DI[10], tckdi, VIO_CK_DI_HD_10 );
+      $setup  (DI[11], posedge CK &&& CSN_WEN_BWEN11 == 0, tdick, VIO_DI_CK_SU_11 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN11 == 0, DI[11], tckdi, VIO_CK_DI_HD_11 );
+      $setup  (DI[12], posedge CK &&& CSN_WEN_BWEN12 == 0, tdick, VIO_DI_CK_SU_12 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN12 == 0, DI[12], tckdi, VIO_CK_DI_HD_12 );
+      $setup  (DI[13], posedge CK &&& CSN_WEN_BWEN13 == 0, tdick, VIO_DI_CK_SU_13 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN13 == 0, DI[13], tckdi, VIO_CK_DI_HD_13 );
+      $setup  (DI[14], posedge CK &&& CSN_WEN_BWEN14 == 0, tdick, VIO_DI_CK_SU_14 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN14 == 0, DI[14], tckdi, VIO_CK_DI_HD_14 );
+      $setup  (DI[15], posedge CK &&& CSN_WEN_BWEN15 == 0, tdick, VIO_DI_CK_SU_15 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN15 == 0, DI[15], tckdi, VIO_CK_DI_HD_15 );
+      $setup  (DI[16], posedge CK &&& CSN_WEN_BWEN16 == 0, tdick, VIO_DI_CK_SU_16 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN16 == 0, DI[16], tckdi, VIO_CK_DI_HD_16 );
+      $setup  (DI[17], posedge CK &&& CSN_WEN_BWEN17 == 0, tdick, VIO_DI_CK_SU_17 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN17 == 0, DI[17], tckdi, VIO_CK_DI_HD_17 );
+      $setup  (DI[18], posedge CK &&& CSN_WEN_BWEN18 == 0, tdick, VIO_DI_CK_SU_18 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN18 == 0, DI[18], tckdi, VIO_CK_DI_HD_18 );
+      $setup  (DI[19], posedge CK &&& CSN_WEN_BWEN19 == 0, tdick, VIO_DI_CK_SU_19 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN19 == 0, DI[19], tckdi, VIO_CK_DI_HD_19 );
+      $setup  (DI[20], posedge CK &&& CSN_WEN_BWEN20 == 0, tdick, VIO_DI_CK_SU_20 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN20 == 0, DI[20], tckdi, VIO_CK_DI_HD_20 );
+      $setup  (DI[21], posedge CK &&& CSN_WEN_BWEN21 == 0, tdick, VIO_DI_CK_SU_21 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN21 == 0, DI[21], tckdi, VIO_CK_DI_HD_21 );
+      $setup  (DI[22], posedge CK &&& CSN_WEN_BWEN22 == 0, tdick, VIO_DI_CK_SU_22 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN22 == 0, DI[22], tckdi, VIO_CK_DI_HD_22 );
+      $setup  (DI[23], posedge CK &&& CSN_WEN_BWEN23 == 0, tdick, VIO_DI_CK_SU_23 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN23 == 0, DI[23], tckdi, VIO_CK_DI_HD_23 );
+      $setup  (DI[24], posedge CK &&& CSN_WEN_BWEN24 == 0, tdick, VIO_DI_CK_SU_24 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN24 == 0, DI[24], tckdi, VIO_CK_DI_HD_24 );
+      $setup  (DI[25], posedge CK &&& CSN_WEN_BWEN25 == 0, tdick, VIO_DI_CK_SU_25 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN25 == 0, DI[25], tckdi, VIO_CK_DI_HD_25 );
+      $setup  (DI[26], posedge CK &&& CSN_WEN_BWEN26 == 0, tdick, VIO_DI_CK_SU_26 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN26 == 0, DI[26], tckdi, VIO_CK_DI_HD_26 );
+      $setup  (DI[27], posedge CK &&& CSN_WEN_BWEN27 == 0, tdick, VIO_DI_CK_SU_27 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN27 == 0, DI[27], tckdi, VIO_CK_DI_HD_27 );
+      $setup  (DI[28], posedge CK &&& CSN_WEN_BWEN28 == 0, tdick, VIO_DI_CK_SU_28 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN28 == 0, DI[28], tckdi, VIO_CK_DI_HD_28 );
+      $setup  (DI[29], posedge CK &&& CSN_WEN_BWEN29 == 0, tdick, VIO_DI_CK_SU_29 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN29 == 0, DI[29], tckdi, VIO_CK_DI_HD_29 );
+      $setup  (DI[30], posedge CK &&& CSN_WEN_BWEN30 == 0, tdick, VIO_DI_CK_SU_30 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN30 == 0, DI[30], tckdi, VIO_CK_DI_HD_30 );
+      $setup  (DI[31], posedge CK &&& CSN_WEN_BWEN31 == 0, tdick, VIO_DI_CK_SU_31 );
+      $hold  (posedge CK &&& CSN_WEN_BWEN31 == 0, DI[31], tckdi, VIO_CK_DI_HD_31 );
+      $setup  (BWEN[0], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_0 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[0], tckbwen, VIO_CK_BWEN_HD_0 );
+      $setup  (BWEN[1], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_1 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[1], tckbwen, VIO_CK_BWEN_HD_1 );
+      $setup  (BWEN[2], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_2 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[2], tckbwen, VIO_CK_BWEN_HD_2 );
+      $setup  (BWEN[3], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_3 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[3], tckbwen, VIO_CK_BWEN_HD_3 );
+      $setup  (BWEN[4], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_4 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[4], tckbwen, VIO_CK_BWEN_HD_4 );
+      $setup  (BWEN[5], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_5 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[5], tckbwen, VIO_CK_BWEN_HD_5 );
+      $setup  (BWEN[6], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_6 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[6], tckbwen, VIO_CK_BWEN_HD_6 );
+      $setup  (BWEN[7], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_7 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[7], tckbwen, VIO_CK_BWEN_HD_7 );
+      $setup  (BWEN[8], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_8 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[8], tckbwen, VIO_CK_BWEN_HD_8 );
+      $setup  (BWEN[9], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_9 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[9], tckbwen, VIO_CK_BWEN_HD_9 );
+      $setup  (BWEN[10], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_10 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[10], tckbwen, VIO_CK_BWEN_HD_10 );
+      $setup  (BWEN[11], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_11 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[11], tckbwen, VIO_CK_BWEN_HD_11 );
+      $setup  (BWEN[12], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_12 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[12], tckbwen, VIO_CK_BWEN_HD_12 );
+      $setup  (BWEN[13], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_13 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[13], tckbwen, VIO_CK_BWEN_HD_13 );
+      $setup  (BWEN[14], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_14 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[14], tckbwen, VIO_CK_BWEN_HD_14 );
+      $setup  (BWEN[15], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_15 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[15], tckbwen, VIO_CK_BWEN_HD_15 );
+      $setup  (BWEN[16], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_16 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[16], tckbwen, VIO_CK_BWEN_HD_16 );
+      $setup  (BWEN[17], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_17 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[17], tckbwen, VIO_CK_BWEN_HD_17 );
+      $setup  (BWEN[18], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_18 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[18], tckbwen, VIO_CK_BWEN_HD_18 );
+      $setup  (BWEN[19], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_19 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[19], tckbwen, VIO_CK_BWEN_HD_19 );
+      $setup  (BWEN[20], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_20 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[20], tckbwen, VIO_CK_BWEN_HD_20 );
+      $setup  (BWEN[21], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_21 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[21], tckbwen, VIO_CK_BWEN_HD_21 );
+      $setup  (BWEN[22], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_22 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[22], tckbwen, VIO_CK_BWEN_HD_22 );
+      $setup  (BWEN[23], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_23 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[23], tckbwen, VIO_CK_BWEN_HD_23 );
+      $setup  (BWEN[24], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_24 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[24], tckbwen, VIO_CK_BWEN_HD_24 );
+      $setup  (BWEN[25], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_25 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[25], tckbwen, VIO_CK_BWEN_HD_25 );
+      $setup  (BWEN[26], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_26 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[26], tckbwen, VIO_CK_BWEN_HD_26 );
+      $setup  (BWEN[27], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_27 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[27], tckbwen, VIO_CK_BWEN_HD_27 );
+      $setup  (BWEN[28], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_28 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[28], tckbwen, VIO_CK_BWEN_HD_28 );
+      $setup  (BWEN[29], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_29 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[29], tckbwen, VIO_CK_BWEN_HD_29 );
+      $setup  (BWEN[30], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_30 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[30], tckbwen, VIO_CK_BWEN_HD_30 );
+      $setup  (BWEN[31], posedge CK &&& CSN_WEN == 0, tbwenck, VIO_BWEN_CK_SU_31 );
+      $hold  (posedge CK &&& CSN_WEN == 0, BWEN[31], tckbwen, VIO_CK_BWEN_HD_31 );
+
+        $hold (posedge CK &&& check_false_w == 1'b0, posedge OEN &&& check_false_w == 1'b0, 0.01,  VIO_FALSE);
+   endspecify
+   `endif
+
+   `endprotect
+   /******************* DELAY CONSTANTS *****************/
+   parameter CK_DOUT_01    =       1;
+   parameter CK_DOUT_10    =       1;
+
+   parameter CK_DOUT_OHD   =       1;
+
+   parameter OEN_DOUT_01  =       1;
+   parameter OEN_DOUT_10  =       1;
+
+   parameter OEN_DOUT_Z1  =       1;
+   parameter OEN_DOUT_Z0  =       1;
+   parameter OEN_DOUT_OHD =       1;
+
+   parameter OEN_DOUT_0Z  =       1;
+   parameter OEN_DOUT_1Z  =       1;
+   /******************* END PARAMETER DECLARATIONS ******/
+   `protect
+   assign DOUTx = outreg;
+   assign csn_wire = csn_reg;
+    assign check_false_w = check_false;
+
+
+   initial ValidA = 1; // assume valid address at start
+
+`ifdef functional_mode
+`else
+	`ifdef modelsim
+		`annotate_inst U1();
+	`else
+    initial begin
+       if( CK_DOUT_01 == 1 && CK_DOUT_OHD == 1) begin
+          $display("************************** Memory Simulation Guide **********************\n");
+          $display(" * Simulation is terminated due to no timing data for memory or datapath.");
+          $display(" * This message was generated from memory or datapath model.");
+          $display(" * If your design contains memory or datapath cells, you should following     ");
+          $display("   the simulation guide as shown below.\n");
+          $display("   case 1) Pre/Post simulation with back-annotation timing file.");
+          $display("           You should include annoatate_designname.v(the file which was");
+          $display("           generated by CubicDelay). The following shows one of the examples.");
+          $display("           ex) verilog my_test_bench.v my_design.v -v std90.v \\ ");
+          $display("               sparam_32x4m4b1.mdlp annotate_my_design.v \n");
+          $display("   case 2) Functional simulation without back-annotation timing file.");
+          $display("           You should include +define+functional_mode in simulation command.");
+          $display("           ex) verilog my_test_bench.v my_design.v -v std90.v \\ ");
+          $display("               sparam_32x4m4b1.mdlp +define+functional_mode \n");
+          $display(" * For more information,");
+          $display("   Please see the $sec_verilog(vcs)/documentation/memory_guide.ps file ");
+          $display(" * Instance name : %m");
+          $display("*************************************************************************\n\n");
+`ifdef no_sim_halt
+`else
+          $finish;
+`endif
+       end
+    end
+	`endif
+`endif
+
+    initial
+       check_false = 1'b1;
+
+/* Modeling for Tri-State output control */
+   always @(negedge oen_int)
+      begin : oen_negedge
+         disable oen_posedge;
+         if( oen_int == 1'b0 )
+            fork
+               #OEN_DOUT_OHD oen_reg = 1'bx;
+               #OEN_DOUT_01 oen_reg = oen_int;
+            join
+         else
+            #OEN_DOUT_OHD oen_reg = oen_int;
+      end
+   always @(posedge oen_int)
+      begin : oen_posedge
+         disable oen_negedge;
+         if( oen_int === 1'b1)
+            #OEN_DOUT_0Z oen_reg = oen_int;
+         else
+            #OEN_DOUT_OHD oen_reg = oen_int;
+      end
+   always @(clk_int)
+      begin
+         if( lastCK == 1'b1 && clk_int == 0) begin
+            // Ignore falling edge CK
+            invalid_flag = 0; 
+         end
+         else if( (csn_int == 1) && ( (lastCK == 1'b1 && clk_int === 1'bx) || (lastCK === 1'bx && clk_int == 0))) begin
+            // no operation
+         end
+         else begin
+            disable NORMAL;
+            #0 -> e_CK_CHANGE;
+         end
+         #0 lastCK = clk_int;
+         #0 lastAx = alatch;
+      end
+
+   always @(e_CK_CHANGE) 
+      begin : NORMAL
+         // always latch the input A at CK rise
+         // implement rising edge
+         if ( (lastCK == 1'b0 && clk_int == 1'b1) || (lastCK === 1'bx && clk_int == 1'b1) || (lastCK == 1'b0 && clk_int === 1'bx) )
+            begin
+               alatch = Ax;
+               latched_bwen = bwen_int;
+               latched_wen = wen_int;
+               csn_reg = csn_int;
+               check_valid_address;
+	       DIx = di_int;
+            end
+
+         // to check hold timing violation by invalid clock rising,x->1
+         if ( (lastCK === 1'bx && clk_int == 1'b1) ) invalid_flag = 1;
+         else if ( clk_int == 1'b0 ) invalid_flag = 0;
+
+         if( (lastCK === 1'b1 && clk_int === 1'bx) || (lastCK === 1'bx && clk_int === 1'b0)) begin
+            // Robust unknown clock -- 000730
+            if ( csn_int == 1'b0 || csn_int === 1'bx ) begin
+               if ( wen_int == 1'b0 || wen_int === 1'bx ) begin
+                  `ifdef no_mem_message
+                  `else
+                     $display("Fatal Error(RF/DF) : CK is unknown in write mode on %m at %t",$realtime);
+                  `endif
+                  write_mem_x;
+                  write_out_x;
+               end
+               else begin
+                  `ifdef no_mem_message
+                  `else
+                      $display("Fatal Error(DF/RF) : CK is unknown in read mode on %m at %t",$realtime);
+                  `endif
+                  write_mem_x;
+                  write_out_x;
+               end
+            end
+         end
+         else begin
+         casez ({clk_int,  csn_reg , wen_int, ValidA})
+            // valid write (1 permutation)
+            4'b1001:
+                begin
+                   if(lastCK === 1'bx) begin
+                      `ifdef no_mem_message
+                      `else
+                      $display("Fatal Error(RF/DF) : Invalid CK rising in write mode on %m at %t",$realtime);
+                      `endif
+                      write_mem_x;
+                      write_out_x;
+                   end
+                   else
+                      write_cycle;
+                end
+
+            // valid read (1 permutation)
+            4'b1011:
+                begin
+                   if(lastCK === 1'bx) begin
+                      `ifdef no_mem_message
+                      `else
+                      $display("Fatal Error(DF/RF) : Invalid CK rising in read mode on %m at %t",$realtime);
+                      `endif
+                      write_mem_x;
+                      write_out_x;
+                   end
+                   else
+                      READ(CK_DOUT_OHD,CK_DOUT_01);
+                end
+               
+
+            // null event designators (45 permutations)
+            4'b0???,
+            4'b?1??:
+               begin
+                  // do nothing; null event
+               end
+
+            // illegal event designators; write cycle (4 permutations)
+            // this is a tricky case; since CK is x, WEN latched address
+            // is ambiguous. 
+            4'bx?x1:
+               begin
+                  `ifdef no_mem_message
+                  `else
+                  $display("Fatal Error(RF/DF) : Invalid CK rising in write mode on %m at %t",$realtime);
+                  `endif
+                  write_mem_x;
+                  write_out_x;
+               end
+            4'bx?01:
+               begin
+                  `ifdef no_mem_message
+                  `else
+                  $display("Fatal Error(RF/DF) : Invalid CK rising in write mode on %m at %t",$realtime);
+                  `endif
+                  write_mem_x;
+                  write_out_x; //990608
+               end
+
+            // illegal event designators; write cycle (1 permutations)
+            4'b??x1:
+               begin
+                  write_loc_byte_x;
+                  write_out_x;
+               end
+            // illegal event designators; write cycle (2 permutations)
+            4'b??01:
+               begin
+                  write_loc_byte_x;
+               end
+            // illegal event designators; read cycle (3 permutations)
+            4'b??11:
+               begin
+                  write_out_x;
+               end
+
+            // write with ambiguous address (1 permutation)
+            4'b100x:
+               begin
+                  write_mem_x;
+               end
+
+            // address is out-of-range; write cycle (7 permutations)
+            4'b??00,
+            4'b??x0:
+               begin
+                  `ifdef no_mem_message
+                  `else
+                  $display("Warning: ADDRESS out-of range on %m at %t",$realtime);
+                  `endif
+               end
+            // address is out-of-range; read cycle (4 permutations)
+            4'b??10:
+               begin
+                  write_out_x;
+               end
+
+            // illegal event designators with ambiguous address; write cycle (7 permutations)
+            4'b??0x:
+               begin
+                  if(clk_int === 1'bx || lastCK === 1'bx) begin
+                     `ifdef no_mem_message
+                     `else
+                     $display("Fatal Error(RF/DF) : Invalid CK rising in write mode on %m at %t",$realtime);
+                     `endif
+                     write_mem_x;
+                     write_out_x;
+                  end
+                  else begin
+                     write_mem_x;
+                  end
+               end
+
+            4'b??xx:
+               begin
+                  write_mem_x;
+                  write_out_x; //990608
+               end
+
+            // illegal event designators with ambiguous address; read cycle (4 permutations)
+            4'b??1x:
+               begin
+                  write_out_x;
+               end
+
+            // default
+            default
+               begin
+                  // invalid input combinations.
+               end
+         endcase
+         end
+
+         outreg_tmp = outreg;
+         //lastCK = clk_int;
+      end
+
+   always @(addr_int)
+      begin
+        if (^addr_int === 1'bx)
+           begin
+              Ax = addrx;
+           end
+        else
+           begin
+              // otherwise, set the internal variable to input address
+              Ax = addr_int;
+           end
+      end
+
+   //
+   // Reaction for unknown CK(CSN event)
+   //
+   always @(negedge csn_int) begin
+      if ( csn_int == 1'b0 || csn_int === 1'bx )  begin
+         if ( wen_int == 1'b0 || wen_int === 1'bx ) begin
+            if ( clk_int === 1'bx ) begin
+               `ifdef no_mem_message
+               `else
+               $display("Fatal Error(RF/DF) : CK is unknown in write mode on %m at %t",$realtime);
+               `endif
+               write_mem_x;
+               write_out_x;
+            end
+         end
+         else begin
+            if ( clk_int === 1'bx ) begin
+               `ifdef no_mem_message
+               `else
+               $display("Fatal Error(DF/RF) : CK is unknown in read mode on %m at %t",$realtime);
+               `endif
+               write_mem_x;
+               write_out_x;
+            end
+         end
+      end
+   end
+
+   //
+   // Reaction for unknown CK(WEN event)
+   //
+   always @(wen_int) begin
+      if ( csn_int == 1'b0 || csn_int === 1'bx ) begin
+         if ( wen_int == 1'b0 || wen_int === 1'bx ) begin
+            if ( clk_int === 1'bx ) begin
+               `ifdef no_mem_message
+               `else
+               $display("Fatal Error(RF/DF) : CK is unknown in write mode on %m at %t",$realtime);
+               `endif
+               write_mem_x;
+               write_out_x;
+            end
+         end
+         else begin
+            if ( clk_int === 1'bx ) begin
+               `ifdef no_mem_message
+               `else
+               $display("Fatal Error(DF/RF) : CK is unknown in read mode on %m at %t",$realtime);
+               `endif
+               write_mem_x;
+               write_out_x;
+            end
+         end
+      end
+   end
+
+   //
+   // Reaction for unknown CK(BWEN event)
+   //
+   always @(bwen_int) begin
+      if ( csn_int == 1'b0 || csn_int === 1'bx ) begin
+         if ( wen_int == 1'b0 || wen_int === 1'bx ) begin
+            if ( clk_int === 1'bx ) begin
+               `ifdef no_mem_message
+               `else
+               $display("Fatal Error(RF/DF) : CK is unknown in write mode on %m at %t",$realtime);
+               `endif
+               write_mem_x;
+               write_out_x;
+            end
+         end
+         else begin
+            if ( clk_int === 1'bx ) begin
+               `ifdef no_mem_message
+               `else
+               $display("Fatal Error(DF/RF) : CK is unknown in read mode on %m at %t",$realtime);
+               `endif
+               write_mem_x;
+               write_out_x;
+            end
+         end
+      end
+   end
+
+
+/* This is the routine for Timing violations */ 
+   always @(VIO_DI_CK_SU_0)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111110);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_0)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111110);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_1)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111101);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_1)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111101);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_2)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111011);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_2)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111011);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_3)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111110111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_3)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111110111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_4)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111101111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_4)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111101111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_5)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111011111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_5)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111011111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_6)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111110111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_6)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111110111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_7)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111101111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_7)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111101111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_8)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111011111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_8)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111011111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_9)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111110111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_9)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111110111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_10)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111101111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_10)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111101111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_11)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111011111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_11)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111011111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_12)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111110111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_12)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111110111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_13)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111101111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_13)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111101111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_14)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111011111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_14)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111011111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_15)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111110111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_15)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111110111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_16)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111101111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_16)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111101111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_17)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111011111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_17)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111011111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_18)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111110111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_18)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111110111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_19)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111101111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_19)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111101111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_20)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111011111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_20)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111011111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_21)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111110111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_21)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111110111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_22)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111101111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_22)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111101111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_23)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111011111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_23)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111011111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_24)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111110111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_24)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111110111111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_25)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111101111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_25)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111101111111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_26)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111011111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_26)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111011111111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_27)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11110111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_27)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11110111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_28)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11101111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_28)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11101111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_29)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11011111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_29)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11011111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_30)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b10111111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_30)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b10111111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_DI_CK_SU_31)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Fatal Error(RF/DF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tds - Error(BWF) : DI setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b01111111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_DI_HD_31)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tdh - Fatal Error(RF/DF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tdh - Error(BWF) : DI hold time to CK violation in write mode spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b01111111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_0)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[0] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[0] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111110);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_0)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[0] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[0] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111110);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_1)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[1] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[1] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111101);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_1)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[1] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[1] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111101);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_2)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[2] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[2] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111011);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_2)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[2] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[2] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111111011);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_3)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[3] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[3] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111110111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_3)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[3] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[3] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111110111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_4)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[4] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[4] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111101111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_4)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[4] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[4] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111101111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_5)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[5] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[5] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111011111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_5)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[5] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[5] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111111011111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_6)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[6] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[6] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111110111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_6)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[6] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[6] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111110111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_7)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[7] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[7] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111101111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_7)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[7] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[7] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111101111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_8)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[8] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[8] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111011111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_8)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[8] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[8] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111111011111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_9)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[9] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[9] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111110111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_9)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[9] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[9] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111110111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_10)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[10] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[10] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111101111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_10)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[10] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[10] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111101111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_11)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[11] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[11] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111011111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_11)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[11] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[11] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111111011111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_12)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[12] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[12] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111110111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_12)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[12] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[12] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111110111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_13)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[13] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[13] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111101111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_13)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[13] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[13] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111101111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_14)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[14] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[14] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111011111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_14)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[14] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[14] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111111011111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_15)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[15] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[15] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111110111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_15)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[15] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[15] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111110111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_16)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[16] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[16] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111101111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_16)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[16] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[16] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111101111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_17)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[17] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[17] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111011111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_17)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[17] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[17] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111111011111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_18)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[18] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[18] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111110111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_18)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[18] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[18] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111110111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_19)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[19] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[19] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111101111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_19)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[19] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[19] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111101111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_20)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[20] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[20] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111011111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_20)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[20] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[20] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111111011111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_21)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[21] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[21] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111110111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_21)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[21] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[21] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111110111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_22)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[22] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[22] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111101111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_22)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[22] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[22] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111101111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_23)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[23] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[23] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111011111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_23)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[23] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[23] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111111011111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_24)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[24] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[24] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111110111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_24)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[24] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[24] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111110111111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_25)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[25] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[25] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111101111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_25)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[25] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[25] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111101111111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_26)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[26] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[26] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111011111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_26)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[26] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[26] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11111011111111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_27)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[27] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[27] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11110111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_27)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[27] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[27] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11110111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_28)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[28] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[28] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11101111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_28)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[28] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[28] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11101111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_29)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[29] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[29] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11011111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_29)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[29] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[29] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b11011111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_30)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[30] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[30] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b10111111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_30)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[30] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[30] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b10111111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_BWEN_CK_SU_31)
+      begin
+         #0 ;
+         if ( clk_int === 1'bx || lastCK === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Fatal Error(RF/DF) : BWEN[31] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tbws - Error(BWF) : BWEN[31] setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b01111111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_BWEN_HD_31)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Tbwh - Fatal Error(RF/DF) : BWEN[31] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Tbwh - Error(BWF) : BWEN[31] hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x_bwen(32'b01111111111111111111111111111111);
+         end
+      end
+
+   always @(VIO_CK_PWL)
+      begin
+         #0 ;
+         #0 ;
+         if(latched_wen == 1'b0 || latched_wen === 1'bx) begin
+            disable NORMAL;
+	    $display("Tckl - Error(DF/RF) : Minimum CK pulse width low violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+	    $display("                    WHOLE MEMORY INVALID on spsrambw_hd_256x32m4 at %t.",$realtime);
+	    write_mem_x;
+	    write_out_x;
+         end
+	 else begin
+            disable NORMAL;
+	    $display("Tckl - Error(DF/RF) : Minimum CK pulse width low violation in read mode on spsrambw_hd_256x32m4  at %t.",$realtime);
+	    $display("                      WHOLE MEMORY INVALID on spsrambw_hd_256x32m4  at %t.",$realtime);
+	    write_mem_x;
+	    write_out_x;
+         end
+      end
+
+   always @(VIO_CK_PWH)
+      begin
+         #0 ;
+         if(latched_wen == 1'b0 || latched_wen === 1'bx) begin
+            if ( lastCK === 1'bx ) begin
+               #0 ;
+            disable NORMAL;
+               $display("Tckh - Fatal Error(RF/DF) : Minimum CK pulse width high violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+               write_mem_x;
+               write_out_x;
+            end
+            else begin
+               #0 ;
+            disable NORMAL;
+               $display("Tckh - Error(BWF) : Minimum CK pulse width high violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+               write_loc_byte_x;
+            end
+         end
+         else begin
+            if ( lastCK === 1'bx ) begin
+               #0 ;
+               disable NORMAL;
+               $display("Tckh - Fatal Error(DF/RF) : Minimum CK pulse width high violation in read mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            end
+            else begin
+               #0 ;
+               disable NORMAL;
+               $display("Tckh - Error(DF/RF) : Minimum CK pulse width high violation in read mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            end
+            write_mem_x;
+            write_out_x;
+         end
+      end
+
+   always @(VIO_CK_CYC)
+      begin
+         #0 ;
+         if(latched_wen == 1'b0 || latched_wen === 1'bx) begin
+            #0 ;
+            disable NORMAL;
+            $display("Tcyc - Error(DF/RF) : Minimum CK cycle time violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            $display("                    WHOLE MEMORY INVALID on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            #0 ;
+            disable NORMAL;
+            $display("Tcyc - Error(DF/RF) : Minimum CK cycle time violation in read mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+            $display("                    WHOLE MEMORY INVALID on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+      end
+
+   always @(VIO_WEN_CK_SU)
+      begin
+         #0 ;
+          if ( clk_int === 1'bx || lastCK === 1'bx) begin
+             #0 ;
+             disable NORMAL;
+             $display("Tws - Fatal Error(RF/DF) : WEN setup time to CK violation on spsrambw_hd_256x32m4 at %t.",$realtime);
+             write_mem_x;
+             write_out_x;
+          end
+          else begin
+             #0 ;
+             disable NORMAL;
+             $display("Tws - Error(RF/BWF) : WEN setup time to CK violation on spsrambw_hd_256x32m4 at %t.",$realtime);
+             write_loc_byte_x;
+             write_out_x;
+          end
+      end
+
+   always @(VIO_CK_WEN_HD)
+      begin
+         #0 ;
+         #0 ;
+         disable NORMAL;
+         if ( clk_int === 1'bx || invalid_flag == 1) begin
+            $display("Twh - Fatal Error(RF/DF) : WEN hold time to CK violation on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_mem_x;
+            write_out_x;
+         end
+         else begin
+            $display("Twh - Error(RF/BWF) : WEN hold time to CK violation on spsrambw_hd_256x32m4 at %t.",$realtime);
+            write_loc_byte_x;
+            write_out_x;
+         end
+      end
+
+   always @(VIO_CSN_CK_SU)
+      begin
+         #0 ;
+         if(wen_int === 1'b0 || wen_int === 1'bx)
+            begin
+                if ( clk_int === 1'bx || lastCK === 1'bx ) begin
+                   #0 ;
+                   disable NORMAL;
+                   $display("Tcs - Fatal Error(RF/DF) : CSN setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+                   write_mem_x;
+                   write_out_x;
+                end
+                else begin
+                   #0 ;
+                   disable NORMAL;
+                   $display("Tcs - Error(BWF) : CSN setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+                   write_loc_byte_x;
+                end
+            end
+         else
+	    begin
+               #0 ;
+               disable NORMAL;
+	       $display("Tcs - Error(DF/RF) : CSN setup time to CK violation in read mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+               write_mem_x;
+               write_out_x;
+	    end
+      end
+
+   always @(VIO_CK_CSN_HD)
+      begin
+         #0 ;
+         #0 ;
+         if(latched_wen === 1'b0 || latched_wen === 1'bx)
+            begin
+                disable NORMAL;
+                if ( clk_int === 1'bx || invalid_flag == 1) begin
+                   $display("Tch - Fatal Error(RF/DF) : CSN hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+                   write_mem_x;
+                   write_out_x;
+                end
+                else begin
+                   $display("Tch - Error(BWF) : CSN hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+                   write_loc_byte_x;
+                end
+            end
+         else
+            begin
+               disable NORMAL;
+               $display("Tch - Error(DF/RF) : CSN hold time to CK violation in read mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+               write_mem_x;
+               write_out_x;
+            end
+      end
+
+   always @(VIO_A_CK_SU)
+      begin
+         #0 ;
+         if(wen_int === 1'b0 || wen_int === 1'bx)
+            begin
+               if ( clk_int === 1'bx || lastCK === 1'bx) begin
+                  #0 ;
+                  disable NORMAL;
+                  $display("Tas - Fatal Error(DF) : ADDRESS setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+                  $display("                  WHOLE MEMORY INVALID on spsrambw_hd_256x32m4 at %t.",$realtime);
+                  write_mem_x; // if there is write mode -- DATA fail occur (970918)
+                  write_out_x;
+               end
+               else begin
+                  #0 ;
+                  disable NORMAL;
+                  $display("Tas - Error(DF) : ADDRESS setup time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+                  $display("                  WHOLE MEMORY INVALID on spsrambw_hd_256x32m4 at %t.",$realtime);
+                  write_mem_x; // if there is write mode -- DATA fail occur (970918)
+               end
+            end
+         else
+            begin
+               #0 ;
+               disable NORMAL;
+               $display("Tas - Error(DF/RF) : ADDRESS setup time to CK violation in read mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+               write_mem_x; 
+               write_out_x; 
+            end
+      end
+
+   always @(VIO_CK_A_HD)
+      begin
+         #0 ;
+         #0 ;
+         if(wen_int === 1'b0 || wen_int === 1'bx)
+            begin
+               disable NORMAL;
+               if ( clk_int === 1'bx || invalid_flag == 1) begin
+                  $display("Tah - Fatal Error(DF) : ADDRESS hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+                  $display("                  WHOLE MEMORY INVALID on spsrambw_hd_256x32m4 at %t.",$realtime);
+                  write_mem_x; // if there is write mode -- DATA fail occur (970918)
+                  write_out_x;
+               end
+               else begin
+                  $display("Tah - Error(DF) : ADDRESS hold time to CK violation in write mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+                  $display("                  WHOLE MEMORY INVALID on spsrambw_hd_256x32m4 at %t.",$realtime);
+                  write_mem_x; // if there is write mode -- DATA fail occur (970918)
+               end
+            end
+         else
+            begin
+               disable NORMAL;
+               $display("Tah - Error(DF/RF) : ADDRESS hold time to CK violation in read mode on spsrambw_hd_256x32m4 at %t.",$realtime);
+               write_mem_x;
+               write_out_x;
+            end
+      end
+
+
+// Task and Functiions 
+   task write_mem_x;
+      begin
+         // fill entire memory with unknowns
+         for (i = 0; i < word_depth; i = i + 1)
+            mem[i] = wordx;
+      end
+   endtask
+
+   task write_loc_x;
+      begin
+         mem[alatch] = wordx;
+      end
+   endtask
+
+   task write_loc_byte_x;  // does not recieve argument value from caller
+      begin
+         retained_mem = mem[alatch];
+         for(i=0; i<word_width; i=i+1) begin
+            if(latched_bwen[i] == 1'b0) di_tmp[i] = 1'bx;
+            else if(latched_bwen[i] === 1'bx) di_tmp[i] = 1'bx;
+            else di_tmp[i] = retained_mem[i];
+         end
+         mem[alatch] = di_tmp;
+      end
+   endtask
+
+   task write_loc_byte_x_bwen;    //recieve argument value from caller
+      input [word_width-1:0] fail_bit;
+      begin
+         retained_mem = mem[alatch];
+ 
+         for(i=0; i<word_width; i=i+1) begin
+            if(fail_bit[i] == 1'b0) di_tmp[i] = 1'bx;
+            else if(fail_bit[i] === 1'bx) di_tmp[i] = 1'bx;
+            else di_tmp[i] = retained_mem[i];
+         end
+ 
+         mem[alatch] = di_tmp;
+      end
+   endtask
+   task write_out_x;
+      begin
+         #CK_DOUT_OHD outreg = wordx;
+      end
+   endtask
+
+   task write_cycle;
+      begin
+         retained_mem = mem[alatch];
+         for(i=0; i<word_width; i=i+1) begin
+            if(latched_bwen[i] == 1'b0) di_tmp[i] = DIx[i];
+            else if(latched_bwen[i] === 1'bx) di_tmp[i] = 1'bx;
+            else di_tmp[i] = retained_mem[i];
+         end
+         mem[alatch] = di_tmp;
+      end
+   endtask
+
+   task READ;
+      input T_ohd,T_acc;
+      real T_ohd, T_acc ;
+      fork
+         if((outreg === mem[alatch]) && (alatch === lastAx)) ;
+         else
+            #T_ohd outreg = wordx;
+         #T_acc outreg = mem[alatch];
+      join
+   endtask
+   task check_valid_address;
+      begin
+         ValidA = 1'b1;
+         if (Ax[0] === 1'bx)
+            ValidA = 1'bx;
+         else if ( Ax > word_depth-1 ) begin
+                ValidA = 1'b0;
+         end
+      end
+   endtask
+
+  `endprotect
+endmodule 
+
+`endcelldefine
+`disable_portfaults
+`nosuppress_faults
